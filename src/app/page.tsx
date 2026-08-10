@@ -1,65 +1,43 @@
-import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 
-export default function Home() {
+const CALCULATORS = [
+  { name: "Blow Room Calculator", path: "/blow-room", desc: "Calculate tuft weight and lap production." },
+  { name: "Card Calculator", path: "/card", desc: "Carding production and draft calculations." },
+  { name: "Drawing Calculator", path: "/drawing", desc: "Draw frame production and sliver weight." },
+  { name: "Comber Calculator", path: "/comber", desc: "Noil percentage and combing production." },
+  { name: "Simplex Calculator", path: "/simplex", desc: "Roving production and twist multiplier." },
+  { name: "Ring Calculator", path: "/ring", desc: "Calculate spindle speed, production, and twist." },
+  { name: "Auto Cone Calculator", path: "/auto-cone", desc: "Winding production and efficiency calculations." },
+];
+
+export default function Dashboard() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="max-w-7xl mx-auto p-4 md:p-12 min-h-screen relative overflow-hidden">
+      {/* Background decorations for a modern glassmorphic vibe */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-secondary/20 blur-[120px] rounded-full pointer-events-none" />
+      
+      <div className="relative z-10 mb-12 text-center md:text-left pt-8">
+        <h2 className="headline-lg text-transparent bg-clip-text bg-gradient-to-r from-primary via-tertiary to-secondary">Dashboard</h2>
+        <p className="body-md text-on-surface-variant mt-2 max-w-xl md:mx-0 mx-auto">Select a calculation module to begin your spinning process computations.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+        {CALCULATORS.map((calc) => (
+          <Link href={calc.path} key={calc.path}>
+            <div className="bg-surface-container/60 backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-6 hover:border-primary/50 hover:bg-surface-variant/60 hover:shadow-[0_8px_30px_rgb(129,140,248,0.15)] hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full flex flex-col justify-between group">
+              <div>
+                <h3 className="headline-md text-on-surface group-hover:text-primary transition-colors">{calc.name}</h3>
+                <p className="body-md text-on-surface-variant mt-3 leading-relaxed">{calc.desc}</p>
+              </div>
+              <div className="mt-8 flex items-center text-secondary font-medium text-sm">
+                <span className="group-hover:translate-x-1 transition-transform">Open Module</span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
