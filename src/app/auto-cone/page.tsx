@@ -1,128 +1,140 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import React from "react";
+import { AutoConeCalculator } from "./AutoConeCalculator";
+import { TechnicalNotes } from "@/components/TechnicalNotes";
+import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 
-import React, { useState } from "react";
-import { InputField } from "@/components/ui/InputField";
-import { CalculationCard } from "@/components/ui/CalculationCard";
+export const metadata: Metadata = {
+  title: "Auto Cone Winding Production & Drum Efficiency Calculator",
+  description:
+    "Calculate automatic cone winding production in kg/shift, commercial bags/day, winding speed (m/min), yarn count (Ne), and drum efficiency for spinning mills in Faisalabad, Coimbatore, and Dhaka.",
+  keywords: [
+    "auto cone calculator",
+    "cone winding production calculation",
+    "winding speed m min",
+    "autoconer efficiency calculation",
+    "Murata QPRO winder production",
+    "Schlafhorst Autoconer calculator",
+    "Savio winding calculation",
+    "yarn package weight cones",
+    "textile winding formulas"
+  ],
+  alternates: {
+    canonical: "/auto-cone",
+  },
+  openGraph: {
+    title: "Auto Cone Winding Production & Drum Efficiency Calculator | SpinCalc",
+    description:
+      "Calculate autoconer winding throughput in kg and bags/shift, drum speeds up to 1600 m/min, clearer cut ratios, and package efficiency.",
+    url: "https://spincalc.vercel.app/auto-cone",
+  },
+};
 
-export default function AutoConeCalculator() {
-  const [machines, setMachines] = useState("1");
-  const [windingSpeed, setWindingSpeed] = useState("1200");
-  const [yarnCount, setYarnCount] = useState("30");
-  const [efficiency, setEfficiency] = useState("85");
-  const [drums, setDrums] = useState("60");
+const formulas = [
+  {
+    name: "Winding Production in kg / 8-hr Shift per Machine",
+    formula: "Production (kg/shift) = (Winding Speed (m/min) × 60 × 8 × (Eff% / 100) × Drums) / (Yarn Count Ne × 1,693.3)",
+    notes: "Constant 1,693.3 is derived from (840 yd/hank × 0.9144 m/yd × 1,000 g/kg) / 453.592 g/lb."
+  },
+  {
+    name: "Conversion to Commercial 100-lb Bags",
+    formula: "Production (lbs/shift) = Production (kg/shift) × 2.20462   ⟹   Bags / Shift = lbs / 100",
+    notes: "Multiply by total autoconer machines to verify balance against ring room output."
+  },
+  {
+    name: "Clearer Cut Factor & Net Efficiency",
+    formula: "Net Efficiency (%) = Theoretical Speed Efficiency (%) - (Cuts / 100 km × Splicing Downtime Factor)",
+    notes: "Electronic yarn clearers (Uster Quantum, Loepfe) extract foreign fibers, thin places, and thick neps."
+  },
+  {
+    name: "Cone Weight & Package Traverse Balance",
+    formula: "Total Cones Produced / Shift = Total Production (kg) / Nominal Cone Weight (kg)",
+    notes: "Standard commercial cone weight is 1.89 kg (for export knitting) or 2.50 kg (for weaving shuttles)."
+  }
+];
 
-  const calculateProduction = () => {
-    const numMachines = parseFloat(machines) || 0;
-    const speed = parseFloat(windingSpeed) || 0;
-    const ne = parseFloat(yarnCount) || 0;
-    const eff = parseFloat(efficiency) || 0;
-    const numDrums = parseFloat(drums) || 0;
+const variables = [
+  {
+    symbol: "Winding Speed",
+    name: "Linear Drum Winding Speed",
+    description: "Linear rate of yarn take-up onto conical paper bobbins driven by grooved traverse drums.",
+    typicalRange: "1,100 – 1,500 m/min"
+  },
+  {
+    symbol: "Yarn Count (Ne)",
+    name: "English Cotton Count",
+    description: "Nominal ring spun yarn count being transferred from cops into knotless packages.",
+    typicalRange: "10s – 80s Ne"
+  },
+  {
+    symbol: "Drums / Machine",
+    name: "Number of Winding Stations",
+    description: "Total automated winding spindles/drums per machine frame.",
+    typicalRange: "48 – 72 drums"
+  },
+  {
+    symbol: "Eff %",
+    name: "Winder Operational Efficiency",
+    description: "Net uptime accounting for cop magazine feeds, suction arm search cycles, and knotter/splicer cycles.",
+    typicalRange: "80% – 88%"
+  }
+];
 
-    if (numMachines === 0 || speed === 0 || ne === 0 || numDrums === 0) return 0;
+const benchmarks = [
+  {
+    title: "Tamil Nadu (Coimbatore & Tirupur)",
+    region: "30s Combed Hosiery Cones",
+    observation: "Murata QPRO and Savio EcoPulsar winders run at 1,200–1,350 m/min with thermosplicers, achieving 84%–87% shift efficiency with 1.89 kg package sizes."
+  },
+  {
+    title: "Pakistan (Faisalabad & Lahore)",
+    region: "20s & 30s Weaving Warp Cones",
+    observation: "Schlafhorst AC6 winders run at 1,250–1,400 m/min for warp yarn with wax application rollers for high-speed air-jet looms."
+  },
+  {
+    title: "Bangladesh (Dhaka & Gazipur)",
+    region: "Export Quality Knitted Fabrics",
+    observation: "Mills maintain stringent clearing channel settings (Uster Classimat matrix) to eliminate all foreign PP (polypropylene) contamination at 1,200 m/min."
+  }
+];
 
-    // Formula for winding production in kg/shift (8 hours) per machine:
-    // Prod (kg) = (Speed(m/min) * 60 * 8 * Eff/100 * Drums) / (Ne * 1693.3)
-    const prodKg = (speed * 60 * 8 * (eff / 100) * numDrums) / (ne * 1693.3);
-    const prodLb = prodKg * 2.20462 * numMachines;
-    return prodLb;
-  };
-
-  const rawProdLb = calculateProduction();
-  const prodLb = rawProdLb.toFixed(2);
-  const prodBags = (rawProdLb / 100).toFixed(2);
-  
-  const rawProdDayLb = rawProdLb * 3;
-  const prodDayLb = rawProdDayLb.toFixed(2);
-  const prodDayBags = (rawProdDayLb / 100).toFixed(2);
-
-  const isHighSpeed = parseFloat(windingSpeed) > 1800;
-
+export default function AutoConePage() {
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-12 flex flex-col lg:flex-row gap-8">
-      {/* Left Column: Inputs */}
-      <div className="w-full lg:w-5/12 bg-surface-container-lowest p-6 rounded-lg border border-outline-variant">
-        <h2 className="headline-md text-primary mb-6">Auto Cone Calculator</h2>
+    <div className="max-w-7xl mx-auto p-4 md:p-12 min-h-screen">
+      {/* Breadcrumb Navigation */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-xs font-jetbrains text-on-surface-variant flex items-center gap-2">
+        <Link href="/" className="hover:text-primary transition-colors">SpinCalc</Link>
+        <span>/</span>
+        <span className="text-secondary">Stage 07</span>
+        <span>/</span>
+        <span className="text-on-surface">Auto Cone</span>
+      </nav>
 
-        <form className="flex flex-col gap-4">
-          <InputField
-            label="Machines"
-            unit="qty"
-            type="number"
-            value={machines}
-            onChange={(e) => setMachines(e.target.value)}
-          />
-          <InputField
-            label="Winding Speed"
-            unit="m/min"
-            type="number"
-            value={windingSpeed}
-            onChange={(e) => setWindingSpeed(e.target.value)}
-            error={isHighSpeed ? "Warning: Speed exceeds recommended limit" : undefined}
-          />
-          <InputField
-            label="Yarn Count"
-            unit="Ne"
-            type="number"
-            value={yarnCount}
-            onChange={(e) => setYarnCount(e.target.value)}
-          />
-          <InputField
-            label="Efficiency"
-            unit="%"
-            type="number"
-            value={efficiency}
-            onChange={(e) => setEfficiency(e.target.value)}
-          />
-          <InputField
-            label="Number of Drums"
-            type="number"
-            value={drums}
-            onChange={(e) => setDrums(e.target.value)}
-          />
-        </form>
-
-        <button className="w-full bg-primary-container text-on-primary-container h-12 rounded-md mt-8 font-semibold hover:opacity-90 transition-opacity">
-          Calculate
-        </button>
+      {/* Page Title & Context */}
+      <div className="mb-8">
+        <h1 className="headline-lg text-on-surface tracking-tight">
+          Auto Cone Winding Production & Drum Efficiency Calculator
+        </h1>
+        <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
+          Calculate automatic cone winding production in kilograms per shift, commercial 100-lb bags/day, drum winding speed (m/min), yarn count (Ne), and clearer package efficiency.
+        </p>
       </div>
 
-      {/* Right Column: Outputs */}
-      <div className="w-full lg:w-7/12 flex flex-col gap-4">
-        {isHighSpeed && (
-          <div className="bg-[#FFFBEB] border border-[#F59E0B] text-[#B45309] p-4 rounded-lg flex items-center gap-3">
-            <span className="material-symbols-outlined">warning</span>
-            <span className="body-md">Winding speed is extremely high. High risk of yarn breakage.</span>
-          </div>
-        )}
+      {/* Interactive Calculator */}
+      <AutoConeCalculator />
 
-        <CalculationCard 
-          title="Total Production / Shift" 
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodLb !== "0.00" ? "success" : "default"}
-        />
-        
-        <CalculationCard 
-          title="Total Production / Day" 
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodDayLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodDayBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodDayLb !== "0.00" ? "success" : "default"}
-        />
-      </div>
+      {/* Crawlable Technical Formulas & Engineering Notes */}
+      <TechnicalNotes
+        departmentTitle="Auto Cone (Winding) Department"
+        formulas={formulas}
+        variables={variables}
+        benchmarks={benchmarks}
+        technicalOverview="The Auto Cone (Automatic Winding) process is the final critical manufacturing stage of the staple fiber spinning mill before conditioning, packing, and dispatch. It rewinds small ring cops (100–150 grams) into knotless, uniform, high-density conical packages (1.89 to 2.50 kg) tailored for high-speed weaving and circular knitting machines. Electronic yarn clearers continuously evaluate optical or capacitive yarn mass variations, snipping out objectionable thick, thin, nep, and foreign fiber faults and rejoining the ends with high-strength air/water splices."
+      />
+
+      {/* Internal Linking & Process Flow Navigation */}
+      <SpinningProcessNav currentRoute="/auto-cone" />
     </div>
   );
 }

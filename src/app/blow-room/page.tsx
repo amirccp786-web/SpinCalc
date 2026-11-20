@@ -1,200 +1,145 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import React from "react";
+import { BlowRoomCalculator } from "./BlowRoomCalculator";
+import { TechnicalNotes } from "@/components/TechnicalNotes";
+import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 
-import React, { useState } from "react";
-import { InputField } from "@/components/ui/InputField";
-import { CalculationCard } from "@/components/ui/CalculationCard";
+export const metadata: Metadata = {
+  title: "Blow Room Production & Lap Weight Calculator",
+  description:
+    "Calculate blow room production in kg/hr, bags/shift, scutcher RPM, calender roller diameter, and cleaning waste percentage for textile spinning mills in Faisalabad, Coimbatore, and Dhaka.",
+  keywords: [
+    "blow room calculator",
+    "blow room production kg hr",
+    "scutcher production calculation",
+    "lap weight calculation",
+    "blow room waste percentage",
+    "cleaning efficiency formula textile",
+    "Faisalabad spinning mills blow room",
+    "chute feed production calculation"
+  ],
+  alternates: {
+    canonical: "/blow-room",
+  },
+  openGraph: {
+    title: "Blow Room Production & Lap Weight Calculator | SpinCalc",
+    description:
+      "Calculate blow room line production in kg/hr, bags/shift, scutcher RPM, and waste percentage for textile spinning mills.",
+    url: "https://spincalc.vercel.app/blow-room",
+  },
+};
 
-export default function BlowRoomCalculator() {
-  const [method, setMethod] = useState<"rate" | "rpm">("rate");
+const formulas = [
+  {
+    name: "Production (lbs / 8-hr Shift) — Scutcher RPM Method",
+    formula: "Production (lbs/shift) = (π × D × N × Lap Weight × Eff% × (100 - Waste%) × Lines) / 12,000",
+    notes: "Where D = Roller Dia in inches, N = Roller RPM, Lap Weight is in oz/yard, and constant 12,000 resolves conversion (36 inches/yd × 16 oz/lb × 10,000 divisor)."
+  },
+  {
+    name: "Production (kg / 8-hr Shift) — Continuous Chute-Feed Method",
+    formula: "Production (kg/shift) = Delivery Rate (kg/hr) × 8 × (Efficiency / 100) × Number of Lines",
+    notes: "Standard on modern Rieter VARIOline & Trützschler Blowroom feeding continuous card chutes without laps."
+  },
+  {
+    name: "Shift Production in 100-lb Commercial Bags",
+    formula: "Bags / Shift = Total Production (lbs / shift) / 100",
+    notes: "Standard commercial production unit utilized by mill managers across Pakistan, India, and Bangladesh."
+  },
+  {
+    name: "Cleaning Efficiency Percentage",
+    formula: "Cleaning Efficiency (%) = ((Trash% in Bales - Trash% in Card Mat) / Trash% in Bales) × 100",
+    notes: "Monitored via Shirley Analyzer or Uster AFIS trash modules to prevent excessive fiber loss."
+  }
+];
 
-  // General state
-  const [machines, setMachines] = useState("1");
-  const [efficiency, setEfficiency] = useState("85");
+const variables = [
+  {
+    symbol: "D",
+    name: "Bottom Calender Roller Diameter",
+    description: "Diameter of the bottom calender roller delivering the compacted fiber lap sheet.",
+    typicalRange: "7.0 – 9.0 inches"
+  },
+  {
+    symbol: "N",
+    name: "Calender Roller RPM",
+    description: "Rotational revolutions per minute of the scutcher calender roller driving lap take-up.",
+    typicalRange: "10 – 18 RPM"
+  },
+  {
+    symbol: "Lap Wt",
+    name: "Lap Weight per Yard",
+    description: "Linear density of the rolled lap sheet measured in ounces per yard.",
+    typicalRange: "12 – 16 oz/yd"
+  },
+  {
+    symbol: "Waste %",
+    name: "Blow Room Droppings & Invisible Loss",
+    description: "Heavy trash, motes, broken seeds, and micro-dust extracted across beating rollers.",
+    typicalRange: "3.0% – 5.5%"
+  },
+  {
+    symbol: "Eff %",
+    name: "Operational Efficiency",
+    description: "Net running time accounting for lap doffing, filter bag cleaning, and magnet inspection.",
+    typicalRange: "82% – 90%"
+  }
+];
 
-  // Method: Rate
-  const [productionRate, setProductionRate] = useState("800");
+const benchmarks = [
+  {
+    title: "Punjab & Sindh (Pakistan)",
+    region: "Faisalabad & Multan",
+    observation: "Local cotton (MNH-93, NIAB) carries 6%–9% initial trash. Chute lines run 700–900 kg/hr with 3.8%–4.5% waste target to safeguard yarn realization."
+  },
+  {
+    title: "Gujarat & Tamil Nadu (India)",
+    region: "Ahmedabad & Coimbatore",
+    observation: "For Shankar-6 and MCU-5 upland cotton, Trützschler blowrooms run at 800–1,100 kg/hr with cleaning efficiency calibrated between 60% and 68%."
+  },
+  {
+    title: "Dhaka & Gazipur (Bangladesh)",
+    region: "Imported US & West African Cotton",
+    observation: "For 30s combed knit yarn lines, clean machine settings prioritize low nep generation (AFIS nep count < 220 neps/g) at 750–850 kg/hr delivery."
+  }
+];
 
-  // Method: RPM
-  const [rollerDiameter, setRollerDiameter] = useState("7");
-  const [rollerRpm, setRollerRpm] = useState("12");
-  const [lapWeight, setLapWeight] = useState("14");
-  const [wastePercentage, setWastePercentage] = useState("4");
-
-  const calculateProduction = () => {
-    const numMachines = parseFloat(machines) || 0;
-    const eff = parseFloat(efficiency) || 0;
-
-    if (numMachines === 0 || eff === 0) return 0;
-
-    if (method === "rate") {
-      const rate = parseFloat(productionRate) || 0;
-      if (rate === 0) return 0;
-      
-      // Formula for blow room production in kg/shift (8 hours):
-      const prodKg = rate * 8 * (eff / 100);
-      const prodLb = prodKg * 2.20462 * numMachines;
-      return prodLb;
-    } else {
-      const d = parseFloat(rollerDiameter) || 0;
-      const n = parseFloat(rollerRpm) || 0;
-      const weight = parseFloat(lapWeight) || 0;
-      const w = parseFloat(wastePercentage) || 0;
-      
-      if (d === 0 || n === 0 || weight === 0) return 0;
-
-      // Formula: Production (lbs/shift) = (pi * D * N * 60 * 8 * Eff * (100 - W) * Scutchers * LapWeight) / (36 * 16 * 100 * 100)
-      // Simplified: (pi * D * N * LapWeight * Eff * (100 - W) * Scutchers) / 12000
-      const prodLb = (Math.PI * d * n * weight * eff * (100 - w) * numMachines) / 12000;
-      return prodLb;
-    }
-  };
-
-  const rawProdLb = calculateProduction();
-  const prodLb = rawProdLb.toFixed(2);
-  const prodBags = (rawProdLb / 100).toFixed(2);
-
-  const rawProdDayLb = rawProdLb * 3;
-  const prodDayLb = rawProdDayLb.toFixed(2);
-  const prodDayBags = (rawProdDayLb / 100).toFixed(2);
-
-  const isHighSpeed = method === "rate" ? parseFloat(productionRate) > 1200 : parseFloat(rollerRpm) > 20;
-
+export default function BlowRoomPage() {
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-12 flex flex-col lg:flex-row gap-8">
-      {/* Left Column: Inputs */}
-      <div className="w-full lg:w-5/12 bg-surface-container-lowest p-6 rounded-lg border border-outline-variant">
-        <h2 className="headline-md text-primary mb-6">Blow Room Calculator</h2>
+    <div className="max-w-7xl mx-auto p-4 md:p-12 min-h-screen">
+      {/* Breadcrumb Navigation */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-xs font-jetbrains text-on-surface-variant flex items-center gap-2">
+        <Link href="/" className="hover:text-primary transition-colors">SpinCalc</Link>
+        <span>/</span>
+        <span className="text-secondary">Stage 01</span>
+        <span>/</span>
+        <span className="text-on-surface">Blow Room</span>
+      </nav>
 
-        <div className="flex gap-6 mb-6">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input 
-              type="radio" 
-              name="method" 
-              value="rate" 
-              checked={method === "rate"} 
-              onChange={() => setMethod("rate")} 
-              className="accent-primary w-4 h-4"
-            />
-            <span className="body-md">By Production Rate</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input 
-              type="radio" 
-              name="method" 
-              value="rpm" 
-              checked={method === "rpm"} 
-              onChange={() => setMethod("rpm")} 
-              className="accent-primary w-4 h-4"
-            />
-            <span className="body-md">By Scutcher RPM</span>
-          </label>
-        </div>
-
-        <form className="flex flex-col gap-4">
-          <InputField
-            label={method === "rate" ? "Machines (Lines)" : "No. of Scutchers"}
-            unit="qty"
-            type="number"
-            value={machines}
-            onChange={(e) => setMachines(e.target.value)}
-          />
-
-          {method === "rate" ? (
-            <InputField
-              label="Production Rate"
-              unit="kg/hr"
-              type="number"
-              value={productionRate}
-              onChange={(e) => setProductionRate(e.target.value)}
-              error={isHighSpeed ? "Warning: Rate exceeds recommended limit" : undefined}
-            />
-          ) : (
-            <>
-              <InputField
-                label="Bottom Calender Roller Dia"
-                unit="inches"
-                type="number"
-                value={rollerDiameter}
-                onChange={(e) => setRollerDiameter(e.target.value)}
-              />
-              <InputField
-                label="Calender Roller RPM"
-                unit="RPM"
-                type="number"
-                value={rollerRpm}
-                onChange={(e) => setRollerRpm(e.target.value)}
-                error={isHighSpeed ? "Warning: RPM exceeds recommended limit" : undefined}
-              />
-              <InputField
-                label="Lap Weight"
-                unit="oz/yard"
-                type="number"
-                value={lapWeight}
-                onChange={(e) => setLapWeight(e.target.value)}
-              />
-              <InputField
-                label="Waste"
-                unit="%"
-                type="number"
-                value={wastePercentage}
-                onChange={(e) => setWastePercentage(e.target.value)}
-              />
-            </>
-          )}
-
-          <InputField
-            label="Efficiency"
-            unit="%"
-            type="number"
-            value={efficiency}
-            onChange={(e) => setEfficiency(e.target.value)}
-          />
-        </form>
-
-        <button className="w-full bg-primary-container text-on-primary-container h-12 rounded-md mt-8 font-semibold hover:opacity-90 transition-opacity">
-          Calculate
-        </button>
+      {/* Page Title & Context */}
+      <div className="mb-8">
+        <h1 className="headline-lg text-on-surface tracking-tight">
+          Blow Room Production & Lap Weight Calculator
+        </h1>
+        <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
+          Compute blow room delivery rates in kilograms per hour, shift output in commercial 100-lb bags, scutcher roller RPM, and cleaning waste percentages for modern textile spinning mills.
+        </p>
       </div>
 
-      {/* Right Column: Outputs */}
-      <div className="w-full lg:w-7/12 flex flex-col gap-4">
-        {isHighSpeed && (
-          <div className="bg-[#FFFBEB] border border-[#F59E0B] text-[#B45309] p-4 rounded-lg flex items-center gap-3">
-            <span className="material-symbols-outlined">warning</span>
-            <span className="body-md">
-              {method === "rate" ? "Production rate" : "Scutcher RPM"} is extremely high. High risk of fiber damage.
-            </span>
-          </div>
-        )}
+      {/* Interactive Calculator */}
+      <BlowRoomCalculator />
 
-        <CalculationCard
-          title="Total Production / Shift"
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodLb !== "0.00" ? "success" : "default"}
-        />
+      {/* Crawlable Technical Formulas & Engineering Notes */}
+      <TechnicalNotes
+        departmentTitle="Blow Room Department"
+        formulas={formulas}
+        variables={variables}
+        benchmarks={benchmarks}
+        technicalOverview="The Blow Room constitutes the primary mechanical opening, blending, and cleaning stage in staple fiber yarn spinning. Raw cotton from compressed bales is opened into tiny tufts, purged of heavy vegetable impurities, seed coat fragments, and dust, and formed into either a calibrated lap or pneumatically transported through chute feeds directly to the carding machines. Accurate mathematical calculations of scutcher calender speed, lap linear weight, and line efficiency ensure uniform mass distribution and balanced production flow across downstream carding lines."
+      />
 
-        <CalculationCard
-          title="Total Production / Day"
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodDayLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodDayBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodDayLb !== "0.00" ? "success" : "default"}
-        />
-      </div>
+      {/* Internal Linking & Process Flow Navigation */}
+      <SpinningProcessNav currentRoute="/blow-room" />
     </div>
   );
 }

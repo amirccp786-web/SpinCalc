@@ -1,126 +1,146 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import React from "react";
+import { DrawingCalculator } from "./DrawingCalculator";
+import { TechnicalNotes } from "@/components/TechnicalNotes";
+import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 
-import React, { useState } from "react";
-import { InputField } from "@/components/ui/InputField";
-import { CalculationCard } from "@/components/ui/CalculationCard";
+export const metadata: Metadata = {
+  title: "Draw Frame Production & Delivery Speed Calculator",
+  description:
+    "Calculate draw frame production in lbs/shift, bags/day, delivery speed (m/min), sliver hank (gr/yd), and autoleveller efficiency for spinning mills in Faisalabad, Coimbatore, and Dhaka.",
+  keywords: [
+    "draw frame calculator",
+    "draw frame production calculation",
+    "draw frame delivery speed m min",
+    "breaker draw frame calculation",
+    "finisher draw frame autoleveller",
+    "sliver doubling calculation",
+    "sliver count CV calculation",
+    "Rieter RSB draw frame",
+    "Truetzschler draw frame calculator"
+  ],
+  alternates: {
+    canonical: "/drawing",
+  },
+  openGraph: {
+    title: "Draw Frame Production & Delivery Speed Calculator | SpinCalc",
+    description:
+      "Calculate draw frame sliver production in lbs/shift and bags/day, delivery speeds up to 1000 m/min, and autoleveller doubling efficiency.",
+    url: "https://spincalc.vercel.app/drawing",
+  },
+};
 
-export default function DrawingCalculator() {
-  const [machines, setMachines] = useState("1");
-  const [deliverySpeed, setDeliverySpeed] = useState("450");
-  const [sliverWeight, setSliverWeight] = useState("65");
-  const [efficiency, setEfficiency] = useState("85");
-  const [deliveries, setDeliveries] = useState("2");
-  
-  const calculateProduction = () => {
-    const numMachines = parseFloat(machines) || 0;
-    const speed = parseFloat(deliverySpeed) || 0;
-    const weight = parseFloat(sliverWeight) || 0;
-    const eff = parseFloat(efficiency) || 0;
-    const numDeliveries = parseFloat(deliveries) || 0;
-    
-    if (numMachines === 0 || speed === 0 || weight === 0 || numDeliveries === 0) return 0;
-    
-    // Formula for drawing production in lbs/shift (8 hours):
-    const prodLb = (speed * 60 * 8 * (eff / 100) * weight * 1.0936 * numDeliveries) / 7000;
-    return prodLb * numMachines;
-  };
+const formulas = [
+  {
+    name: "Draw Frame Production in lbs / 8-hr Shift",
+    formula: "Production (lbs/shift) = (Delivery Speed (m/min) × 1.0936 × 60 × 8 × (Eff% / 100) × Sliver gr/yd × Deliveries) / 7,000",
+    notes: "Applies to both breaker (non-autolevelled) and finisher (autolevelled) draw frame passages."
+  },
+  {
+    name: "Total Draw Frame Draft",
+    formula: "Total Draft = (Delivered Sliver Hank Ne / Infeed Sliver Hank Ne) × Number of Doublings",
+    notes: "Alternatively: Total Draft = (Total Infeed Weight gr/yd × Doublings) / Delivered Sliver Weight gr/yd."
+  },
+  {
+    name: "Production in Commercial 100-lb Bags",
+    formula: "Bags / Shift = Total Production (lbs / shift) / 100",
+    notes: "Multiply by 3 for daily 24-hour mill-floor bag production allocation."
+  },
+  {
+    name: "Autoleveller Correction Range (A%)",
+    formula: "A% = ((Actual Delivered Weight - Target Weight) / Target Weight) × 100",
+    notes: "Autolevellers adjust draft dynamically within a ±25% mechanical correction limit."
+  }
+];
 
-  const rawProdLb = calculateProduction();
-  const prodLb = rawProdLb.toFixed(2);
-  const prodBags = (rawProdLb / 100).toFixed(2);
-  
-  const rawProdDayLb = rawProdLb * 3;
-  const prodDayLb = rawProdDayLb.toFixed(2);
-  const prodDayBags = (rawProdDayLb / 100).toFixed(2);
+const variables = [
+  {
+    symbol: "Delivery Speed",
+    name: "Calender Delivery Roller Speed",
+    description: "Linear throughput speed of the delivered sliver passing into the rotary coiler.",
+    typicalRange: "400 – 900 m/min"
+  },
+  {
+    symbol: "Deliveries",
+    name: "Heads per Draw Frame",
+    description: "Single-delivery (1 delivery) for modern autolevellers (Rieter RSB); twin-delivery (2 heads) for breaker passages.",
+    typicalRange: "1 or 2 deliveries"
+  },
+  {
+    symbol: "Sliver Weight",
+    name: "Finisher Delivered Sliver Weight",
+    description: "Target linear density of the finished sliver fed to the Simplex/Roving frames.",
+    typicalRange: "50 – 70 grains/yd (3.3 – 4.6 ktex)"
+  },
+  {
+    symbol: "Doubling",
+    name: "Number of Feed Slivers",
+    description: "Number of carded or combed sliver cans fed simultaneously into the drafting system (typically 6 or 8).",
+    typicalRange: "6 – 8 ends"
+  },
+  {
+    symbol: "Eff %",
+    name: "Machine Operational Efficiency",
+    description: "Accounts for can doffing cycles, sliver breaks, sliver piecing, and autoleveller alarms.",
+    typicalRange: "82% – 90%"
+  }
+];
 
-  const isHighSpeed = parseFloat(deliverySpeed) > 800;
+const benchmarks = [
+  {
+    title: "Punjab (Faisalabad & Lahore)",
+    region: "30s & 20s Carded Hosiery",
+    observation: "Rieter RSB-D 50 autoleveller frames operate at 650–750 m/min delivery speed with 60–65 gr/yd sliver, keeping sliver CVm% under 2.4%."
+  },
+  {
+    title: "Tamil Nadu (Coimbatore & Tirupur)",
+    region: "40s Combed Compact Weaving",
+    observation: "Finisher draw frames run at 550–650 m/min with 8 doublings. A% variation is kept strictly within ±0.8% to minimize count CV% on ring frames."
+  },
+  {
+    title: "Bangladesh (Gazipur & Narayanganj)",
+    region: "100% Export Knit Mills",
+    observation: "Modern LMW LDF3 and Trützschler TD 10 draw frames maintain 88% overall efficiency with automatic can changers at 700 m/min."
+  }
+];
 
+export default function DrawingPage() {
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-12 flex flex-col lg:flex-row gap-8">
-      {/* Left Column: Inputs */}
-      <div className="w-full lg:w-5/12 bg-surface-container-lowest p-6 rounded-lg border border-outline-variant">
-        <h2 className="headline-md text-primary mb-6">Drawing Calculator</h2>
-        
-        <form className="flex flex-col gap-4">
-          <InputField 
-            label="Machines" 
-            unit="qty" 
-            type="number"
-            value={machines}
-            onChange={(e) => setMachines(e.target.value)}
-          />
-          <InputField 
-            label="Delivery Speed" 
-            unit="m/min" 
-            type="number"
-            value={deliverySpeed}
-            onChange={(e) => setDeliverySpeed(e.target.value)}
-            error={isHighSpeed ? "Warning: Speed exceeds recommended limit" : undefined}
-          />
-          <InputField 
-            label="Sliver Weight" 
-            unit="grains/yd" 
-            type="number"
-            value={sliverWeight}
-            onChange={(e) => setSliverWeight(e.target.value)}
-          />
-          <InputField 
-            label="Efficiency" 
-            unit="%" 
-            type="number"
-            value={efficiency}
-            onChange={(e) => setEfficiency(e.target.value)}
-          />
-          <InputField 
-            label="Deliveries per Machine" 
-            type="number"
-            value={deliveries}
-            onChange={(e) => setDeliveries(e.target.value)}
-          />
-        </form>
-        
-        <button className="w-full bg-primary-container text-on-primary-container h-12 rounded-md mt-8 font-semibold hover:opacity-90 transition-opacity">
-          Calculate
-        </button>
+    <div className="max-w-7xl mx-auto p-4 md:p-12 min-h-screen">
+      {/* Breadcrumb Navigation */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-xs font-jetbrains text-on-surface-variant flex items-center gap-2">
+        <Link href="/" className="hover:text-primary transition-colors">SpinCalc</Link>
+        <span>/</span>
+        <span className="text-secondary">Stage 03</span>
+        <span>/</span>
+        <span className="text-on-surface">Draw Frame</span>
+      </nav>
+
+      {/* Page Title & Context */}
+      <div className="mb-8">
+        <h1 className="headline-lg text-on-surface tracking-tight">
+          Draw Frame Production & Delivery Speed Calculator
+        </h1>
+        <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
+          Calculate draw frame production in lbs/shift, 100-lb bags/day, delivery speed (m/min), sliver hank (grains/yd), and doubling draft efficiency for textile spinning mills.
+        </p>
       </div>
 
-      {/* Right Column: Outputs */}
-      <div className="w-full lg:w-7/12 flex flex-col gap-4">
-        {isHighSpeed && (
-          <div className="bg-[#FFFBEB] border border-[#F59E0B] text-[#B45309] p-4 rounded-lg flex items-center gap-3">
-            <span className="material-symbols-outlined">warning</span>
-            <span className="body-md">Delivery speed is extremely high. High risk of fiber damage.</span>
-          </div>
-        )}
-        
-        <CalculationCard 
-          title="Total Production / Shift" 
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodLb !== "0.00" ? "success" : "default"}
-        />
-        
-        <CalculationCard 
-          title="Total Production / Day" 
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodDayLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodDayBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodDayLb !== "0.00" ? "success" : "default"}
-        />
-      </div>
+      {/* Interactive Calculator */}
+      <DrawingCalculator />
+
+      {/* Crawlable Technical Formulas & Engineering Notes */}
+      <TechnicalNotes
+        departmentTitle="Draw Frame Department"
+        formulas={formulas}
+        variables={variables}
+        benchmarks={benchmarks}
+        technicalOverview="The Draw Frame performs two quintessential metallurgical functions in short-staple cotton spinning: fiber parallelization through roller drafting and mass homogenization through doubling (feeding 6 to 8 slivers simultaneously). Modern autoleveller draw frames continuously scan the entering mass variations via mechanical or optical sensors and adjust the main drafting ratio within milliseconds. Precision calculations of delivery speed (m/min), sliver grain weight, and delivery count are critical to meeting international Uster CV% benchmarks."
+      />
+
+      {/* Internal Linking & Process Flow Navigation */}
+      <SpinningProcessNav currentRoute="/drawing" />
     </div>
   );
 }

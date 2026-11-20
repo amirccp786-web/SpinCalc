@@ -1,122 +1,140 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import React from "react";
+import { CardCalculator } from "./CardCalculator";
+import { TechnicalNotes } from "@/components/TechnicalNotes";
+import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 
-import React, { useState } from "react";
-import { InputField } from "@/components/ui/InputField";
-import { CalculationCard } from "@/components/ui/CalculationCard";
+export const metadata: Metadata = {
+  title: "Carding Machine Production & Sliver Hank Calculator",
+  description:
+    "Calculate carding production in kg/hr, lbs/shift, delivery speed (m/min), sliver hank (grains/yd), and waste percentage for textile spinning mills in Coimbatore, Faisalabad, and Dhaka.",
+  keywords: [
+    "carding calculator",
+    "carding production kg hr",
+    "carding machine delivery speed",
+    "sliver weight grains per yard",
+    "card sliver hank Ne",
+    "carding draft calculation",
+    "Rieter card production",
+    "Truetzschler carding calculator",
+    "textile carding formulas"
+  ],
+  alternates: {
+    canonical: "/card",
+  },
+  openGraph: {
+    title: "Carding Machine Production & Sliver Hank Calculator | SpinCalc",
+    description:
+      "Calculate carding delivery speeds, sliver weights in grains/yd, shift production in bags, and draft efficiency for spinning mills.",
+    url: "https://spincalc.vercel.app/card",
+  },
+};
 
-export default function CardCalculator() {
-  const [machines, setMachines] = useState("1");
-  const [deliverySpeed, setDeliverySpeed] = useState("150");
-  const [sliverWeight, setSliverWeight] = useState("70");
-  const [efficiency, setEfficiency] = useState("85");
+const formulas = [
+  {
+    name: "Card Production in lbs / 8-hr Shift",
+    formula: "Production (lbs/shift) = (Delivery Speed (m/min) × 1.0936 × 60 × 8 × (Eff% / 100) × Sliver Grains/yd) / 7,000",
+    notes: "Derived from linear delivery where 1 meter = 1.0936 yards and 7,000 grains = 1 avoirdupois pound."
+  },
+  {
+    name: "Card Production in Kilograms per Hour (kg/hr)",
+    formula: "Production (kg/hr) = (Delivery Speed (m/min) × 60 × Sliver Weight (ktex or g/m) × Eff%) / 100,000",
+    notes: "Metric formula widely used with modern sliver autolevellers calibrated in ktex (grams per meter)."
+  },
+  {
+    name: "Sliver Hank Conversion (Ne from grains/yd)",
+    formula: "Sliver Hank (Ne) = 8.33 / Sliver Weight (grains/yard)",
+    notes: "For example, 70 grains/yard corresponds to 8.33 / 70 = 0.119 Ne sliver."
+  },
+  {
+    name: "Total Carding Draft",
+    formula: "Total Draft = Feed Lap Weight (grains/yd) / Delivered Sliver Weight (grains/yd)",
+    notes: "Typical total mechanical draft on modern cards ranges from 80 to 140."
+  }
+];
 
-  const calculateProduction = () => {
-    const numMachines = parseFloat(machines) || 0;
-    const speed = parseFloat(deliverySpeed) || 0;
-    const weight = parseFloat(sliverWeight) || 0;
-    const eff = parseFloat(efficiency) || 0;
+const variables = [
+  {
+    symbol: "Delivery Speed",
+    name: "Doffer / Calender Linear Speed",
+    description: "Linear rate of sliver delivery emerging through the coiler into the sliver can.",
+    typicalRange: "140 – 260 m/min"
+  },
+  {
+    symbol: "Sliver Weight",
+    name: "Delivered Sliver Mass per Unit Length",
+    description: "Measured in grains per yard (gr/yd) or metric ktex (g/m). Target determines breaker draw frame draft.",
+    typicalRange: "55 – 75 grains/yd (3.6 – 5.0 ktex)"
+  },
+  {
+    symbol: "Eff %",
+    name: "Carding Machine Efficiency",
+    description: "Operational uptime accounting for can changes, cylinder grinding, flat stripping, and web breaks.",
+    typicalRange: "85% – 93%"
+  },
+  {
+    symbol: "Waste %",
+    name: "Licker-in & Flat Strips Extraction",
+    description: "Short fiber, neps, and trash removed by stationary flats, revolving flats, and under-casing.",
+    typicalRange: "4.5% – 7.5%"
+  }
+];
 
-    if (numMachines === 0 || speed === 0 || weight === 0) return 0;
+const benchmarks = [
+  {
+    title: "Tamil Nadu (Coimbatore & Tirupur)",
+    region: "30s & 40s Combed Hosiery",
+    observation: "Rieter C70 / Trützschler TC15 cards run at 170–210 m/min delivering 60–65 gr/yd sliver. Target nep removal efficiency (NRE) exceeds 88%–92%."
+  },
+  {
+    title: "Punjab (Faisalabad & Sheikhupura)",
+    region: "20s & 16s Carded Weaving Yarn",
+    observation: "Card speeds reach 220–250 m/min with 70–75 gr/yd sliver (production 85–110 kg/hr/card) using Shankar-6 or local Afzal cotton."
+  },
+  {
+    title: "Dhaka & Gazipur (Bangladesh)",
+    region: "Export Quality Combed Knit",
+    observation: "Mills focus on low CVm% (< 2.8%) at 180 m/min delivery speed to maintain strict Uster 5% statistics on final combed cones."
+  }
+];
 
-    // Formula for card production in lbs/shift (8 hours):
-    // Speed(m/min) * 60 * 8 * Eff/100 = meters/shift
-    // meters * 1.0936 = yards
-    // yards * grains/yd = grains
-    // grains / 7000 = lbs
-    const prodLb = (speed * 60 * 8 * (eff / 100) * weight * 1.0936) / 7000;
-    return prodLb * numMachines;
-  };
-
-  const rawProdLb = calculateProduction();
-  const prodLb = rawProdLb.toFixed(2);
-  const prodBags = (rawProdLb / 100).toFixed(2);
-  
-  const rawProdDayLb = rawProdLb * 3;
-  const prodDayLb = rawProdDayLb.toFixed(2);
-  const prodDayBags = (rawProdDayLb / 100).toFixed(2);
-  
-  const isHighSpeed = parseFloat(deliverySpeed) > 250;
-
+export default function CardPage() {
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-12 flex flex-col lg:flex-row gap-8">
-      {/* Left Column: Inputs */}
-      <div className="w-full lg:w-5/12 bg-surface-container-lowest p-6 rounded-lg border border-outline-variant">
-        <h2 className="headline-md text-primary mb-6">Card Calculator</h2>
+    <div className="max-w-7xl mx-auto p-4 md:p-12 min-h-screen">
+      {/* Breadcrumb Navigation */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-xs font-jetbrains text-on-surface-variant flex items-center gap-2">
+        <Link href="/" className="hover:text-primary transition-colors">SpinCalc</Link>
+        <span>/</span>
+        <span className="text-secondary">Stage 02</span>
+        <span>/</span>
+        <span className="text-on-surface">Carding</span>
+      </nav>
 
-        <form className="flex flex-col gap-4">
-          <InputField
-            label="Machines"
-            unit="qty"
-            type="number"
-            value={machines}
-            onChange={(e) => setMachines(e.target.value)}
-          />
-          <InputField
-            label="Delivery Speed"
-            unit="m/min"
-            type="number"
-            value={deliverySpeed}
-            onChange={(e) => setDeliverySpeed(e.target.value)}
-            error={isHighSpeed ? "Warning: Speed exceeds recommended limit" : undefined}
-          />
-          <InputField
-            label="Sliver Weight"
-            unit="grains/yd"
-            type="number"
-            value={sliverWeight}
-            onChange={(e) => setSliverWeight(e.target.value)}
-          />
-          <InputField
-            label="Efficiency"
-            unit="%"
-            type="number"
-            value={efficiency}
-            onChange={(e) => setEfficiency(e.target.value)}
-          />
-        </form>
-
-        <button className="w-full bg-primary-container text-on-primary-container h-12 rounded-md mt-8 font-semibold hover:opacity-90 transition-opacity">
-          Calculate
-        </button>
+      {/* Page Title & Context */}
+      <div className="mb-8">
+        <h1 className="headline-lg text-on-surface tracking-tight">
+          Carding Machine Production & Sliver Hank Calculator
+        </h1>
+        <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
+          Calculate carding production rates in kilograms per hour, shift output in commercial 100-lb bags, delivery speed (m/min), sliver hank (grains/yd), and draft efficiency for spinning mills.
+        </p>
       </div>
 
-      {/* Right Column: Outputs */}
-      <div className="w-full lg:w-7/12 flex flex-col gap-4">
-        {isHighSpeed && (
-          <div className="bg-[#FFFBEB] border border-[#F59E0B] text-[#B45309] p-4 rounded-lg flex items-center gap-3">
-            <span className="material-symbols-outlined">warning</span>
-            <span className="body-md">Delivery speed is extremely high. High risk of fiber damage.</span>
-          </div>
-        )}
+      {/* Interactive Calculator */}
+      <CardCalculator />
 
-        <CalculationCard
-          title="Total Production / Shift"
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodLb !== "0.00" ? "success" : "default"}
-        />
-        
-        <CalculationCard
-          title="Total Production / Day"
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodDayLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodDayBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodDayLb !== "0.00" ? "success" : "default"}
-        />
-      </div>
+      {/* Crawlable Technical Formulas & Engineering Notes */}
+      <TechnicalNotes
+        departmentTitle="Carding Department"
+        formulas={formulas}
+        variables={variables}
+        benchmarks={benchmarks}
+        technicalOverview="Referred to universally as the 'Heart of the Spinning Mill', the Carding machine individualizes tangled fiber tufts into single fibers, eliminates persistent seed-coat fragments and micro-dust, disentangles neps, and condenses the cleaned web into a continuous sliver. Sliver linear density (grains/yard or ktex), delivery speed (m/min), and waste extraction through revolving flat strips directly dictate downstream drawing performance, roving evenness, and yarn tensile strength."
+      />
+
+      {/* Internal Linking & Process Flow Navigation */}
+      <SpinningProcessNav currentRoute="/card" />
     </div>
   );
 }

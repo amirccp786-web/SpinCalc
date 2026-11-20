@@ -1,136 +1,146 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import React from "react";
+import { SimplexCalculator } from "./SimplexCalculator";
+import { TechnicalNotes } from "@/components/TechnicalNotes";
+import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 
-import React, { useState } from "react";
-import { InputField } from "@/components/ui/InputField";
-import { CalculationCard } from "@/components/ui/CalculationCard";
+export const metadata: Metadata = {
+  title: "Simplex Roving Production & Twist Multiplier Calculator",
+  description:
+    "Calculate speed frame (simplex) roving production in lbs/shift, 100-lb bags/day, flyer spindle speed (RPM), roving hank (Ne), and TPI for spinning mills in Faisalabad, Coimbatore, and Dhaka.",
+  keywords: [
+    "simplex calculator",
+    "speed frame production calculation",
+    "roving hank calculation",
+    "roving twist multiplier TM",
+    "simplex flyer speed RPM",
+    "roving TPI formula",
+    "Electro-Jet roving frame",
+    "LMW LF1660 speed frame",
+    "textile roving calculations"
+  ],
+  alternates: {
+    canonical: "/simplex",
+  },
+  openGraph: {
+    title: "Simplex Roving Production & Twist Multiplier Calculator | SpinCalc",
+    description:
+      "Calculate roving frame production in lbs/shift and bags, flyer spindle speeds up to 1400 RPM, roving hank Ne, and twist multiplier.",
+    url: "https://spincalc.vercel.app/simplex",
+  },
+};
 
-export default function SimplexCalculator() {
-  const [machines, setMachines] = useState("1");
-  const [spindleSpeed, setSpindleSpeed] = useState("1000");
-  const [rovingHank, setRovingHank] = useState("1.2");
-  const [tpi, setTpi] = useState("1.1");
-  const [efficiency, setEfficiency] = useState("88");
-  const [spindles, setSpindles] = useState("120");
-  
-  const calculateProduction = () => {
-    const numMachines = parseFloat(machines) || 0;
-    const speed = parseFloat(spindleSpeed) || 0;
-    const hank = parseFloat(rovingHank) || 0;
-    const twist = parseFloat(tpi) || 0;
-    const eff = parseFloat(efficiency) || 0;
-    const numSpindles = parseFloat(spindles) || 0;
-    
-    if (numMachines === 0 || speed === 0 || hank === 0 || twist === 0 || numSpindles === 0) return 0;
-    
-    // Formula for simplex (roving) production in lbs/shift (8 hours):
-    // Prod (lbs) = (Speed * 60 * 8 * Eff/100 * Spindles) / (TPI * 36 * 840 * Hank)
-    const prodLb = (speed * 60 * 8 * (eff / 100) * numSpindles) / (twist * 36 * 840 * hank);
-    return prodLb * numMachines;
-  };
+const formulas = [
+  {
+    name: "Simplex Production in lbs / 8-hr Shift",
+    formula: "Production (lbs/shift) = (Spindle Speed (RPM) × 60 × 8 × (Eff% / 100) × Spindles) / (TPI × 36 × 840 × Roving Hank Ne)",
+    notes: "Where 36 converts inches to yards and 840 is the standard English Cotton Count hank constant."
+  },
+  {
+    name: "Twist Per Inch (TPI) from Twist Multiplier (TM)",
+    formula: "TPI = TM × √(Roving Hank Ne)",
+    notes: "For roving: TM is maintained between 1.10 and 1.35 to balance unwinding strength vs ring draftability."
+  },
+  {
+    name: "Flyer Delivery Speed in inches/min",
+    formula: "Delivery Speed (in/min) = Spindle RPM / TPI",
+    notes: "Convert to meters/min by multiplying by 0.0254."
+  },
+  {
+    name: "Production in Commercial 100-lb Bags",
+    formula: "Bags / Shift = Total Production (lbs / shift) / 100",
+    notes: "Directly determines the number of roving bobbins required to feed ring frame creels."
+  }
+];
 
-  const rawProdLb = calculateProduction();
-  const prodLb = rawProdLb.toFixed(2);
-  const prodBags = (rawProdLb / 100).toFixed(2);
-  
-  const rawProdDayLb = rawProdLb * 3;
-  const prodDayLb = rawProdDayLb.toFixed(2);
-  const prodDayBags = (rawProdDayLb / 100).toFixed(2);
+const variables = [
+  {
+    symbol: "Spindle Speed",
+    name: "Flyer Spindle RPM",
+    description: "Revolutions per minute of the suspended flyer inserting twist into the roving strand.",
+    typicalRange: "900 – 1,350 RPM"
+  },
+  {
+    symbol: "Roving Hank (Ne)",
+    name: "English Cotton Count of Roving",
+    description: "Fineness of roving. Lower counts (0.8–1.0 Ne) feed coarse ring yarns; higher counts (1.2–2.0 Ne) feed fine counts.",
+    typicalRange: "0.80 – 2.20 Ne"
+  },
+  {
+    symbol: "TPI",
+    name: "Twist Per Inch",
+    description: "Number of helical turns inserted per inch of roving to withstand bobbin winding and creel unwinding.",
+    typicalRange: "1.00 – 1.65 TPI"
+  },
+  {
+    symbol: "Spindles",
+    name: "Spindles per Speed Frame",
+    description: "Total roving bobbin positions mounted on the machine frame.",
+    typicalRange: "120 – 160 spindles"
+  },
+  {
+    symbol: "Eff %",
+    name: "Operational Efficiency",
+    description: "Accounts for automatic doffing cycles, roving end breaks, bobbin rail reversal, and creel changes.",
+    typicalRange: "86% – 92%"
+  }
+];
 
-  const isHighSpeed = parseFloat(spindleSpeed) > 1500;
+const benchmarks = [
+  {
+    title: "Punjab (Faisalabad & Multan)",
+    region: "30s Carded & Combed Knit",
+    observation: "LMW LF1400 / LF1660 frames run at 1,050–1,150 RPM with 1.15–1.25 Ne roving hank and 1.15 TM, yielding 88% overall shift efficiency."
+  },
+  {
+    title: "Tamil Nadu (Coimbatore & Dindigul)",
+    region: "40s & 50s Combed Compact",
+    observation: "Roving frames run fine roving (1.40–1.60 Ne) at 1,150–1,250 RPM. Strict tension control prevents false drafting along the flyer leg."
+  },
+  {
+    title: "Bangladesh (Dhaka & Gazipur)",
+    region: "Export Quality Composite Mills",
+    observation: "Modern frames equipped with roving stop motions and auto-doffers cycle doffs in under 3 minutes to maximize shift output."
+  }
+];
 
+export default function SimplexPage() {
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-12 flex flex-col lg:flex-row gap-8">
-      {/* Left Column: Inputs */}
-      <div className="w-full lg:w-5/12 bg-surface-container-lowest p-6 rounded-lg border border-outline-variant">
-        <h2 className="headline-md text-primary mb-6">Simplex Calculator</h2>
-        
-        <form className="flex flex-col gap-4">
-          <InputField 
-            label="Machines" 
-            unit="qty" 
-            type="number"
-            value={machines}
-            onChange={(e) => setMachines(e.target.value)}
-          />
-          <InputField 
-            label="Spindle Speed" 
-            unit="RPM" 
-            type="number"
-            value={spindleSpeed}
-            onChange={(e) => setSpindleSpeed(e.target.value)}
-            error={isHighSpeed ? "Warning: Speed exceeds recommended limit" : undefined}
-          />
-          <InputField 
-            label="Roving Hank" 
-            unit="Ne" 
-            type="number"
-            value={rovingHank}
-            onChange={(e) => setRovingHank(e.target.value)}
-          />
-          <InputField 
-            label="Twist per Inch" 
-            unit="TPI" 
-            type="number"
-            value={tpi}
-            onChange={(e) => setTpi(e.target.value)}
-          />
-          <InputField 
-            label="Efficiency" 
-            unit="%" 
-            type="number"
-            value={efficiency}
-            onChange={(e) => setEfficiency(e.target.value)}
-          />
-          <InputField 
-            label="Number of Spindles" 
-            type="number"
-            value={spindles}
-            onChange={(e) => setSpindles(e.target.value)}
-          />
-        </form>
-        
-        <button className="w-full bg-primary-container text-on-primary-container h-12 rounded-md mt-8 font-semibold hover:opacity-90 transition-opacity">
-          Calculate
-        </button>
+    <div className="max-w-7xl mx-auto p-4 md:p-12 min-h-screen">
+      {/* Breadcrumb Navigation */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-xs font-jetbrains text-on-surface-variant flex items-center gap-2">
+        <Link href="/" className="hover:text-primary transition-colors">SpinCalc</Link>
+        <span>/</span>
+        <span className="text-secondary">Stage 05</span>
+        <span>/</span>
+        <span className="text-on-surface">Simplex</span>
+      </nav>
+
+      {/* Page Title & Context */}
+      <div className="mb-8">
+        <h1 className="headline-lg text-on-surface tracking-tight">
+          Simplex Roving Production & Twist Multiplier Calculator
+        </h1>
+        <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
+          Calculate speed frame (simplex) roving production in lbs/shift, 100-lb bags/day, flyer spindle speed (RPM), roving hank (Ne), and TPI for cotton and blended yarn manufacturing.
+        </p>
       </div>
 
-      {/* Right Column: Outputs */}
-      <div className="w-full lg:w-7/12 flex flex-col gap-4">
-        {isHighSpeed && (
-          <div className="bg-[#FFFBEB] border border-[#F59E0B] text-[#B45309] p-4 rounded-lg flex items-center gap-3">
-            <span className="material-symbols-outlined">warning</span>
-            <span className="body-md">Spindle speed is extremely high. High risk of fiber damage.</span>
-          </div>
-        )}
-        
-        <CalculationCard 
-          title="Total Production / Shift" 
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodLb !== "0.00" ? "success" : "default"}
-        />
-        
-        <CalculationCard 
-          title="Total Production / Day" 
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodDayLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodDayBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodDayLb !== "0.00" ? "success" : "default"}
-        />
-      </div>
+      {/* Interactive Calculator */}
+      <SimplexCalculator />
+
+      {/* Crawlable Technical Formulas & Engineering Notes */}
+      <TechnicalNotes
+        departmentTitle="Simplex (Speed Frame) Department"
+        formulas={formulas}
+        variables={variables}
+        benchmarks={benchmarks}
+        technicalOverview="The Simplex (Speed Frame / Roving Frame) represents the intermediate thinning process bridging heavy finisher sliver and fine ring spun yarn. It attenuates the draw frame sliver into an even, slender roving strand (0.80 to 2.20 Ne) and inserts a modest protective twist (1.10–1.35 TM) so the roving can be wound onto bobbins and transported without stretching. Precise control of spindle speed, roving hank, and twist multiplier is mandatory: insufficient twist causes roving breakage in the creel, while excessive twist impedes the break draft on ring spinning frames."
+      />
+
+      {/* Internal Linking & Process Flow Navigation */}
+      <SpinningProcessNav currentRoute="/simplex" />
     </div>
   );
 }

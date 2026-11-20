@@ -1,151 +1,146 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import React from "react";
+import { ComberCalculator } from "./ComberCalculator";
+import { TechnicalNotes } from "@/components/TechnicalNotes";
+import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 
-import React, { useState } from "react";
-import { InputField } from "@/components/ui/InputField";
-import { CalculationCard } from "@/components/ui/CalculationCard";
+export const metadata: Metadata = {
+  title: "Comber Production & Noil Extraction Calculator",
+  description:
+    "Calculate comber production in lbs/shift, bags/day, nips per minute, feed per nip (mm), and noil extraction percentage for combed cotton spinning mills in Tirupur, Faisalabad, and Dhaka.",
+  keywords: [
+    "comber calculator",
+    "comber production calculation",
+    "comber noil percentage",
+    "nips per minute comber",
+    "feed per nip calculation",
+    "combed yarn realization",
+    "Rieter comber E86 production",
+    "comber lap weight grains per yard",
+    "textile combing calculations"
+  ],
+  alternates: {
+    canonical: "/comber",
+  },
+  openGraph: {
+    title: "Comber Production & Noil Extraction Calculator | SpinCalc",
+    description:
+      "Calculate comber machine production, nips/min, feed per nip, and noil waste percentage for premium combed cotton yarns.",
+    url: "https://spincalc.vercel.app/comber",
+  },
+};
 
-export default function ComberCalculator() {
-  const [machines, setMachines] = useState("1");
-  const [noOfHeads, setNoOfHeads] = useState("8");
-  const [nipsPerMin, setNipsPerMin] = useState("350");
-  const [feedPerNip, setFeedPerNip] = useState("5.2");
-  const [lapWeight, setLapWeight] = useState("1000"); // grains/yd
-  const [noilPercentage, setNoilPercentage] = useState("16");
-  const [efficiency, setEfficiency] = useState("85");
-  
-  const calculateProduction = () => {
-    const numMachines = parseFloat(machines) || 0;
-    const heads = parseFloat(noOfHeads) || 0;
-    const nips = parseFloat(nipsPerMin) || 0;
-    const feed = parseFloat(feedPerNip) || 0;
-    const weight = parseFloat(lapWeight) || 0;
-    const noil = parseFloat(noilPercentage) || 0;
-    const eff = parseFloat(efficiency) || 0;
-    
-    if (numMachines === 0 || heads === 0 || nips === 0 || feed === 0 || weight === 0) return 0;
-    
-    // Delivery speed from nips and feed:
-    // Speed(m/min) = Nips/min * Feed(mm) / 1000
-    const speed = (nips * feed) / 1000;
-    
-    // Formula for comber production in lbs/shift (8 hours):
-    // Same as card: Speed(m/min) * 60 * 8 * Eff/100 * Weight(grains/yd) * 1.0936 / 7000
-    // Then apply noil deduction
-    const prodLb = (speed * 60 * 8 * (eff / 100) * weight * 1.0936 * (1 - (noil / 100))) / 7000;
-    return prodLb * numMachines * heads;
-  };
+const formulas = [
+  {
+    name: "Comber Shift Production in lbs / 8-hr Shift",
+    formula: "Production (lbs/shift) = (Speed (m/min) × 60 × 8 × (Eff% / 100) × Lap gr/yd × 1.0936 × (1 - Noil% / 100) × Heads) / 7,000",
+    notes: "Where linear speed (m/min) = (Nips/min × Feed per Nip in mm) / 1,000."
+  },
+  {
+    name: "Comber Production in kg/hr per Machine",
+    formula: "Production (kg/hr) = (Nips/min × Feed (mm) × 60 × Lap (g/m) × (1 - Noil% / 100) × Eff% × Heads) / 10^8",
+    notes: "Metric formula for modern comber control units calibrated in grams per meter (g/m) of combed lap."
+  },
+  {
+    name: "Noil Extraction Percentage",
+    formula: "Noil % = (Weight of Noil Extracted / Total Lap Fed) × 100",
+    notes: "Directly determines yarn realization: Every 1% increase in comber noil decreases overall mill yarn realization by ~0.85%."
+  },
+  {
+    name: "Production in Commercial 100-lb Bags",
+    formula: "Bags / Shift = Total Production (lbs / shift) / 100",
+    notes: "Multiply by 3 for 24-hour daily output."
+  }
+];
 
-  const rawProdLb = calculateProduction();
-  const prodLb = rawProdLb.toFixed(2);
-  const prodBags = (rawProdLb / 100).toFixed(2);
-  
-  const rawProdDayLb = rawProdLb * 3;
-  const prodDayLb = rawProdDayLb.toFixed(2);
-  const prodDayBags = (rawProdDayLb / 100).toFixed(2);
+const variables = [
+  {
+    symbol: "Nips / min",
+    name: "Combing Nipping Frequency",
+    description: "Number of nipping and detaching cycles per minute executed by the nipper assembly and circular comb.",
+    typicalRange: "350 – 500 nips/min"
+  },
+  {
+    symbol: "Feed / nip",
+    name: "Lap Feed Distance per Cycle",
+    description: "Linear length of lap sheet advanced by the feed roller into the nipper jaws per nip cycle.",
+    typicalRange: "4.3 – 5.5 mm"
+  },
+  {
+    symbol: "Lap Weight",
+    name: "Comber Infeed Lap Weight",
+    description: "Heavy sliver lap prepared on the lap former / sliver lap machine.",
+    typicalRange: "900 – 1,200 grains/yd (65 – 85 g/m)"
+  },
+  {
+    symbol: "Noil %",
+    name: "Short Fiber Extraction Ratio",
+    description: "Percentage of short fibers (< 16 mm), remaining neps, and seed-coat fragments removed as waste.",
+    typicalRange: "12% – 22%"
+  },
+  {
+    symbol: "Heads",
+    name: "Number of Combing Heads",
+    description: "Independent combing stations per frame delivering to a common drawbox.",
+    typicalRange: "8 heads per machine"
+  }
+];
 
-  const isHighSpeed = parseFloat(nipsPerMin) > 500;
+const benchmarks = [
+  {
+    title: "Tirupur & Coimbatore (Tamil Nadu)",
+    region: "30s & 40s Combed Hosiery",
+    observation: "Rieter E86 and Toyota combers run at 450–500 nips/min with 14%–16% noil extraction, producing premium knit yarns with 50% fewer yarn faults."
+  },
+  {
+    title: "Faisalabad & Lahore (Punjab)",
+    region: "Export Combed Weaving & Knitting",
+    observation: "Mills running Shankar-6 / Pakistani cotton operate at 380–440 nips/min with 15%–18% noil to satisfy strict export tensile strength (CSP > 2600)."
+  },
+  {
+    title: "Dhaka & Gazipur (Bangladesh)",
+    region: "RMG Export Knitted Fabrics",
+    observation: "Leading composite mills run 8-head combers at 420 nips/min with 16% noil, maintaining comber sliver CVm% under 3.0%."
+  }
+];
 
+export default function ComberPage() {
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-12 flex flex-col lg:flex-row gap-8">
-      {/* Left Column: Inputs */}
-      <div className="w-full lg:w-5/12 bg-surface-container-lowest p-6 rounded-lg border border-outline-variant">
-        <h2 className="headline-md text-primary mb-6">Comber Calculator</h2>
-        
-        <form className="flex flex-col gap-4">
-          <InputField 
-            label="Machines" 
-            unit="qty" 
-            type="number"
-            value={machines}
-            onChange={(e) => setMachines(e.target.value)}
-          />
-          <InputField 
-            label="No. of Heads" 
-            unit="per machine" 
-            type="number"
-            value={noOfHeads}
-            onChange={(e) => setNoOfHeads(e.target.value)}
-          />
-          <InputField 
-            label="Nips per Minute" 
-            unit="Nips" 
-            type="number"
-            value={nipsPerMin}
-            onChange={(e) => setNipsPerMin(e.target.value)}
-            error={isHighSpeed ? "Warning: Speed exceeds recommended limit" : undefined}
-          />
-          <InputField 
-            label="Feed per Nip" 
-            unit="mm" 
-            type="number"
-            value={feedPerNip}
-            onChange={(e) => setFeedPerNip(e.target.value)}
-          />
-          <InputField 
-            label="Lap Weight" 
-            unit="grains/yd" 
-            type="number"
-            value={lapWeight}
-            onChange={(e) => setLapWeight(e.target.value)}
-          />
-          <InputField 
-            label="Noil Extraction" 
-            unit="%" 
-            type="number"
-            value={noilPercentage}
-            onChange={(e) => setNoilPercentage(e.target.value)}
-          />
-          <InputField 
-            label="Efficiency" 
-            unit="%" 
-            type="number"
-            value={efficiency}
-            onChange={(e) => setEfficiency(e.target.value)}
-          />
-        </form>
-        
-        <button className="w-full bg-primary-container text-on-primary-container h-12 rounded-md mt-8 font-semibold hover:opacity-90 transition-opacity">
-          Calculate
-        </button>
+    <div className="max-w-7xl mx-auto p-4 md:p-12 min-h-screen">
+      {/* Breadcrumb Navigation */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-xs font-jetbrains text-on-surface-variant flex items-center gap-2">
+        <Link href="/" className="hover:text-primary transition-colors">SpinCalc</Link>
+        <span>/</span>
+        <span className="text-secondary">Stage 04</span>
+        <span>/</span>
+        <span className="text-on-surface">Comber</span>
+      </nav>
+
+      {/* Page Title & Context */}
+      <div className="mb-8">
+        <h1 className="headline-lg text-on-surface tracking-tight">
+          Comber Production & Noil Extraction Calculator
+        </h1>
+        <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
+          Calculate combing machine production in lbs/shift, 100-lb bags/day, nips per minute, feed per nip (mm), lap linear weight, and noil waste percentage for combed cotton spinning.
+        </p>
       </div>
 
-      {/* Right Column: Outputs */}
-      <div className="w-full lg:w-7/12 flex flex-col gap-4">
-        {isHighSpeed && (
-          <div className="bg-[#FFFBEB] border border-[#F59E0B] text-[#B45309] p-4 rounded-lg flex items-center gap-3">
-            <span className="material-symbols-outlined">warning</span>
-            <span className="body-md">Nips per minute is extremely high. High risk of fiber damage.</span>
-          </div>
-        )}
-        
-        <CalculationCard 
-          title="Total Production / Shift" 
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodLb !== "0.00" ? "success" : "default"}
-        />
-        
-        <CalculationCard 
-          title="Total Production / Day" 
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prodDayLb}</span>
-              <span className="body-md text-on-surface-variant">lbs</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{prodDayBags}</span>
-              <span className="body-md text-on-surface-variant">bags</span>
-            </div>
-          }
-          status={prodDayLb !== "0.00" ? "success" : "default"}
-        />
-      </div>
+      {/* Interactive Calculator */}
+      <ComberCalculator />
+
+      {/* Crawlable Technical Formulas & Engineering Notes */}
+      <TechnicalNotes
+        departmentTitle="Combing Department"
+        formulas={formulas}
+        variables={variables}
+        benchmarks={benchmarks}
+        technicalOverview="The Combing operation represents the decisive quality upgrade step distinguishing premium combed yarns from standard carded yarns. The comber extracts fibers below a preset cut-off length (typically < 14–16 mm), clears out residual micro-neps, eliminates remaining seed fragments, and meticulously straightens fiber hooks. Accurately configuring nip frequency (350–500 nips/min), feed step per nip (4.3–5.5 mm), and noil extraction percentage (12%–22%) strikes the crucial economic balance between yarn tensile strength (CSP), Uster evenness, and overall mill yarn realization."
+      />
+
+      {/* Internal Linking & Process Flow Navigation */}
+      <SpinningProcessNav currentRoute="/comber" />
     </div>
   );
 }
