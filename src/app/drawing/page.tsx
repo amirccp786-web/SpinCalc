@@ -2,106 +2,141 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import React from "react";
 import { DrawingCalculator } from "./DrawingCalculator";
-import { TechnicalNotes } from "@/components/TechnicalNotes";
+import { TechnicalNotes, FormulaItem, VariableDef, WorkedExample, MillBenchmark } from "@/components/TechnicalNotes";
 import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 
 export const metadata: Metadata = {
-  title: "Draw Frame Production & Delivery Speed Calculator",
+  title: "Draw Frame Production & Actual Draft Calculator",
   description:
-    "Calculate draw frame production in lbs/shift, bags/day, delivery speed (m/min), sliver hank (gr/yd), and autoleveller efficiency for spinning mills in Faisalabad, Coimbatore, and Dhaka.",
+    "Calculate draw frame production in kg/hr/delivery, actual draft, delivery speed (m/min), and sliver weight (g/m) using verified textile spinning equations.",
   keywords: [
     "draw frame calculator",
-    "draw frame production calculation",
-    "draw frame delivery speed m min",
-    "breaker draw frame calculation",
-    "finisher draw frame autoleveller",
+    "draw frame production kg hr delivery",
+    "draw frame actual draft formula",
     "sliver doubling calculation",
-    "sliver count CV calculation",
-    "Rieter RSB draw frame",
-    "Truetzschler draw frame calculator"
+    "autoleveller draw frame calculations",
+    "textile drawing calculations"
   ],
   alternates: {
-    canonical: "/drawing",
+    canonical: "https://spincalc.vercel.app/drawing",
   },
   openGraph: {
-    title: "Draw Frame Production & Delivery Speed Calculator | SpinCalc",
+    title: "Draw Frame Production & Actual Draft Calculator | SpinCalc",
     description:
-      "Calculate draw frame sliver production in lbs/shift and bags/day, delivery speeds up to 1000 m/min, and autoleveller doubling efficiency.",
+      "Calculate draw frame delivery rate in kg/hr/del, actual draft, and shift output in bags using verified textile engineering formulas.",
     url: "https://spincalc.vercel.app/drawing",
   },
 };
 
-const formulas = [
+const processDefinition =
+  "The Draw Frame performs fiber parallelization through roller drafting and mass homogenization through doubling (feeding 6 to 8 slivers simultaneously). High-speed autoleveller draw frames continuously scan entering mass variations and adjust dynamic drafting ratios within milliseconds. Calculating delivery speed (m/min), sliver linear density (g/m), and actual draft is critical to suppressing short-term drafting waves and achieving low yarn count CV%.";
+
+const formulas: FormulaItem[] = [
   {
-    name: "Draw Frame Production in lbs / 8-hr Shift",
-    formula: "Production (lbs/shift) = (Delivery Speed (m/min) × 1.0936 × 60 × 8 × (Eff% / 100) × Sliver gr/yd × Deliveries) / 7,000",
-    notes: "Applies to both breaker (non-autolevelled) and finisher (autolevelled) draw frame passages."
+    name: "Draw Frame Production per Delivery Head (kg/hr/del)",
+    formula: "Production (kg/hr/del) = (Delivery Speed [m/min] × 60 × Sliver Weight [g/m] / 1000) × (Eff % / 100)",
+    notes: "Multiply by the number of deliveries per machine (1 for finisher autoleveller, 2 for breaker frame) and total machines to find mill room output."
   },
   {
-    name: "Total Draw Frame Draft",
-    formula: "Total Draft = (Delivered Sliver Hank Ne / Infeed Sliver Hank Ne) × Number of Doublings",
-    notes: "Alternatively: Total Draft = (Total Infeed Weight gr/yd × Doublings) / Delivered Sliver Weight gr/yd."
+    name: "Actual Draft Calculation",
+    formula: "Actual Draft = (Feed Sliver Weight [g/m] × Doublings) / Delivered Sliver Weight [g/m]",
+    notes: "Accounts for the total combined mass fed into the drafting zone divided by the final delivered sliver linear density."
   },
   {
-    name: "Production in Commercial 100-lb Bags",
-    formula: "Bags / Shift = Total Production (lbs / shift) / 100",
-    notes: "Multiply by 3 for daily 24-hour mill-floor bag production allocation."
-  },
-  {
-    name: "Autoleveller Correction Range (A%)",
-    formula: "A% = ((Actual Delivered Weight - Target Weight) / Target Weight) × 100",
-    notes: "Autolevellers adjust draft dynamically within a ±25% mechanical correction limit."
+    name: "Unit Conversion (g/m to grains/yard)",
+    formula: "Sliver (grains/yd) = Sliver (g/m) × 14.17   ⟺   Sliver (g/m) = Sliver (grains/yd) / 14.17",
+    notes: "Standard draw frame sliver of 4.20 g/m corresponds to ~59.5 grains/yard."
   }
 ];
 
-const variables = [
+const variables: VariableDef[] = [
   {
     symbol: "Delivery Speed",
-    name: "Calender Delivery Roller Speed",
-    description: "Linear throughput speed of the delivered sliver passing into the rotary coiler.",
-    typicalRange: "400 – 900 m/min"
-  },
-  {
-    symbol: "Deliveries",
-    name: "Heads per Draw Frame",
-    description: "Single-delivery (1 delivery) for modern autolevellers (Rieter RSB); twin-delivery (2 heads) for breaker passages.",
-    typicalRange: "1 or 2 deliveries"
+    name: "Calender Delivery Speed",
+    unit: "m/min",
+    description: "Linear rate of delivered sliver passing into the rotary coiler head.",
+    typicalRange: "400 – 850 m/min"
   },
   {
     symbol: "Sliver Weight",
-    name: "Finisher Delivered Sliver Weight",
-    description: "Target linear density of the finished sliver fed to the Simplex/Roving frames.",
-    typicalRange: "50 – 70 grains/yd (3.3 – 4.6 ktex)"
+    name: "Delivered Sliver Weight",
+    unit: "g/m",
+    description: "Linear density of the finished sliver fed to the speed frame / comber lap former.",
+    typicalRange: "3.5 – 5.0 g/m (50 – 70 gr/yd)"
   },
   {
-    symbol: "Doubling",
-    name: "Number of Feed Slivers",
-    description: "Number of carded or combed sliver cans fed simultaneously into the drafting system (typically 6 or 8).",
-    typicalRange: "6 – 8 ends"
+    symbol: "Feed Sliver",
+    name: "Infeed Sliver Linear Weight",
+    unit: "g/m",
+    description: "Weight of each carded or combed sliver fed into the creel.",
+    typicalRange: "4.0 – 5.5 g/m"
+  },
+  {
+    symbol: "Doublings",
+    name: "Number of Feed Ends",
+    unit: "ends",
+    description: "Number of cans combined in parallel into the drafting zone to equalize mass variation.",
+    typicalRange: "6 or 8 ends"
   },
   {
     symbol: "Eff %",
-    name: "Machine Operational Efficiency",
-    description: "Accounts for can doffing cycles, sliver breaks, sliver piecing, and autoleveller alarms.",
+    name: "Operational Efficiency",
+    unit: "%",
+    description: "Net machine operating uptime accounting for can doffing, sliver piecing, and autoleveller stops.",
     typicalRange: "82% – 90%"
   }
 ];
 
-const benchmarks = [
+const workedExample: WorkedExample = {
+  title: "Twin-Delivery Breaker Draw Frame Output & Draft",
+  scenario:
+    "A spinning mill in Lahore operates a twin-delivery draw frame at 500 m/min delivery speed with a delivered sliver weight of 4.20 g/m, feeding 8 cans of 4.50 g/m sliver at 85% operating efficiency.",
+  givenInputs: [
+    { label: "Delivery Speed", value: "500 m/min" },
+    { label: "Delivered Sliver", value: "4.20 g/m" },
+    { label: "Feed Sliver", value: "4.50 g/m" },
+    { label: "Doublings", value: "8 Ends" },
+    { label: "Deliveries", value: "2 Heads" },
+    { label: "Efficiency", value: "85%" }
+  ],
+  steps: [
+    {
+      stepTitle: "Calculate Actual Draft",
+      formulaStr: "Actual Draft = (Feed Sliver × Doublings) / Delivered Sliver",
+      calculationStr: "(4.50 × 8) / 4.20 = 36.00 / 4.20",
+      resultStr: "8.57 Draft Ratio"
+    },
+    {
+      stepTitle: "Calculate Hourly Production per Delivery Head",
+      formulaStr: "kg/hr/del = (Delivery Speed × 60 × Sliver Weight / 1000) × (Eff / 100)",
+      calculationStr: "(500 × 60 × 4.20 / 1000) × 0.85 = 126.00 × 0.85",
+      resultStr: "107.10 kg/hr/delivery"
+    },
+    {
+      stepTitle: "Calculate Total Machine Shift Production (2 Heads, 8 Hours)",
+      formulaStr: "Total Shift kg = 107.10 × 2 Heads × 8 Hours | Bags = (Shift kg × 2.20462) / 100",
+      calculationStr: "214.20 kg/hr × 8 = 1,713.60 kg × 2.20462 / 100",
+      resultStr: "1,713.60 kg = 3,777.84 lbs = 37.78 Bags / shift"
+    }
+  ],
+  finalResult: "107.10 kg/hr/delivery (214.20 kg/hr total, 37.78 bags / shift, Draft: 8.57)"
+};
+
+const benchmarks: MillBenchmark[] = [
   {
     title: "Punjab (Faisalabad & Lahore)",
-    region: "30s & 20s Carded Hosiery",
-    observation: "Rieter RSB-D 50 autoleveller frames operate at 650–750 m/min delivery speed with 60–65 gr/yd sliver, keeping sliver CVm% under 2.4%."
+    region: "30s Carded Knitting",
+    observation: "Rieter RSB autoleveller frames operate at 600–700 m/min with 4.0–4.4 g/m sliver, keeping sliver CVm% under 2.4%."
   },
   {
-    title: "Tamil Nadu (Coimbatore & Tirupur)",
-    region: "40s Combed Compact Weaving",
-    observation: "Finisher draw frames run at 550–650 m/min with 8 doublings. A% variation is kept strictly within ±0.8% to minimize count CV% on ring frames."
+    title: "Coimbatore (India)",
+    region: "40s Combed Compact",
+    observation: "Finisher draw frames run at 550–650 m/min with 8 doublings. A% variation is kept strictly within ±0.8%."
   },
   {
-    title: "Bangladesh (Gazipur & Narayanganj)",
-    region: "100% Export Knit Mills",
-    observation: "Modern LMW LDF3 and Trützschler TD 10 draw frames maintain 88% overall efficiency with automatic can changers at 700 m/min."
+    title: "Dhaka (Bangladesh)",
+    region: "Export Knitwear",
+    observation: "LMW LDF3 and Trützschler TD 10 draw frames maintain 88% overall efficiency with automatic can changers."
   }
 ];
 
@@ -120,23 +155,24 @@ export default function DrawingPage() {
       {/* Page Title & Context */}
       <div className="mb-8">
         <h1 className="headline-lg text-on-surface tracking-tight">
-          Draw Frame Production & Delivery Speed Calculator
+          Draw Frame Production & Actual Draft Calculator
         </h1>
         <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
-          Calculate draw frame production in lbs/shift, 100-lb bags/day, delivery speed (m/min), sliver hank (grains/yd), and doubling draft efficiency for textile spinning mills.
+          Calculate draw frame production in kg/hr/delivery, total machine shift output in commercial 100-lb bags, actual draft, and delivery speed using verified textile engineering equations.
         </p>
       </div>
 
       {/* Interactive Calculator */}
       <DrawingCalculator />
 
-      {/* Crawlable Technical Formulas & Engineering Notes */}
+      {/* Crawlable Technical Formulas, Key & Worked Example */}
       <TechnicalNotes
         departmentTitle="Draw Frame Department"
+        processDefinition={processDefinition}
         formulas={formulas}
         variables={variables}
+        workedExample={workedExample}
         benchmarks={benchmarks}
-        technicalOverview="The Draw Frame performs two quintessential metallurgical functions in short-staple cotton spinning: fiber parallelization through roller drafting and mass homogenization through doubling (feeding 6 to 8 slivers simultaneously). Modern autoleveller draw frames continuously scan the entering mass variations via mechanical or optical sensors and adjust the main drafting ratio within milliseconds. Precision calculations of delivery speed (m/min), sliver grain weight, and delivery count are critical to meeting international Uster CV% benchmarks."
       />
 
       {/* Internal Linking & Process Flow Navigation */}

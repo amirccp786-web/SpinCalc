@@ -1,12 +1,26 @@
 import Link from "next/link";
 import React from "react";
+import {
+  Wind,
+  Layers,
+  Ruler,
+  Filter,
+  RotateCw,
+  RefreshCw,
+  Package,
+  ArrowLeft,
+  ArrowRight,
+  GitFork,
+  Grid3X3,
+  LucideIcon
+} from "lucide-react";
 
 export interface ProcessStep {
   name: string;
   path: string;
   desc: string;
   stage: string;
-  icon: string;
+  icon: LucideIcon;
   outputUnit: string;
 }
 
@@ -16,56 +30,56 @@ export const SPINNING_PROCESS_STEPS: ProcessStep[] = [
     path: "/blow-room",
     desc: "Bale opening, cleaning, tuft formation & lap production calculations.",
     stage: "Stage 1",
-    icon: "air",
-    outputUnit: "kg/hr | Lap oz/yd"
+    icon: Wind,
+    outputUnit: "kg/hr | g/m"
   },
   {
     name: "Carding Machine",
     path: "/card",
-    desc: "Carding production rate, draft, sliver hank & waste percentage.",
+    desc: "Carding production rate, total draft, sliver linear density & waste.",
     stage: "Stage 2",
-    icon: "view_stream",
-    outputUnit: "m/min | grains/yd"
+    icon: Layers,
+    outputUnit: "m/min | g/m"
   },
   {
     name: "Draw Frame",
     path: "/drawing",
-    desc: "Breaker & finisher delivery speed, autolevelling & doubling calculations.",
+    desc: "Breaker & finisher delivery speed, autolevelling & doubling draft.",
     stage: "Stage 3",
-    icon: "linear_scale",
-    outputUnit: "m/min | bags/shift"
+    icon: Ruler,
+    outputUnit: "kg/hr/del | Draft"
   },
   {
     name: "Comber",
     path: "/comber",
     desc: "Combing nip frequency, feed/nip, and noil extraction percentage.",
     stage: "Stage 4 (Combed)",
-    icon: "filter_list",
+    icon: Filter,
     outputUnit: "nips/min | Noil %"
   },
   {
     name: "Simplex (Speed Frame)",
     path: "/simplex",
-    desc: "Roving hank (Ne), flyer spindle speed (RPM), and roving twist multiplier.",
+    desc: "Roving hank (Ne), flyer delivery speed, spindle RPM, and TPI.",
     stage: "Stage 5",
-    icon: "cyclone",
-    outputUnit: "RPM | Roving Ne"
+    icon: RotateCw,
+    outputUnit: "kg/sp-hr | TPI"
   },
   {
     name: "Ring Frame",
     path: "/ring",
-    desc: "Spindle speed (RPM), TPI, yarn count Ne, OPS, and production in 100-lb bags.",
+    desc: "Spindle RPM, TPI, yarn count Ne, g/spindle/shift, and OPS.",
     stage: "Stage 6",
-    icon: "autorenew",
-    outputUnit: "Spindle RPM | Bags/day"
+    icon: RefreshCw,
+    outputUnit: "g/sp-shift | OPS"
   },
   {
     name: "Auto Cone (Winding)",
     path: "/auto-cone",
-    desc: "Cone winding speed, package efficiency, clearer cuts & production in kg.",
+    desc: "Winding speed, drum efficiency, and production in kg/drum/hr.",
     stage: "Stage 7",
-    icon: "inventory_2",
-    outputUnit: "m/min | Cones/shift"
+    icon: Package,
+    outputUnit: "kg/drum/hr | Cones"
   }
 ];
 
@@ -93,12 +107,10 @@ export function SpinningProcessNav({ currentRoute }: SpinningProcessNavProps) {
         {prevStep ? (
           <Link
             href={prevStep.path}
-            className="w-full sm:w-auto flex items-center gap-3 p-3 px-5 rounded-lg border border-outline-variant/40 bg-surface-container/60 hover:bg-surface-variant hover:border-primary/40 transition-all text-on-surface group"
+            className="w-full sm:w-auto flex items-center gap-3 p-3 px-5 rounded-lg border border-outline-variant/40 bg-surface-container/60 hover:bg-surface-variant hover:border-primary/40 transition-all text-on-surface group cursor-pointer"
             title={`Previous Process: ${prevStep.name}`}
           >
-            <span className="material-symbols-outlined text-secondary group-hover:-translate-x-1 transition-transform">
-              arrow_back
-            </span>
+            <ArrowLeft className="w-5 h-5 text-secondary group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
             <div className="text-left">
               <span className="text-xs uppercase tracking-wider text-on-surface-variant block">
                 Previous Stage ({prevStep.stage})
@@ -114,16 +126,16 @@ export function SpinningProcessNav({ currentRoute }: SpinningProcessNavProps) {
 
         <Link
           href="/"
-          className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5"
+          className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5 cursor-pointer"
         >
-          <span className="material-symbols-outlined text-[18px]">grid_view</span>
+          <Grid3X3 className="w-4 h-4" aria-hidden="true" />
           All Mill Modules
         </Link>
 
         {nextStep && (
           <Link
             href={nextStep.path}
-            className="w-full sm:w-auto flex items-center justify-end gap-3 p-3 px-5 rounded-lg border border-outline-variant/40 bg-surface-container/60 hover:bg-surface-variant hover:border-primary/40 transition-all text-on-surface group"
+            className="w-full sm:w-auto flex items-center justify-end gap-3 p-3 px-5 rounded-lg border border-outline-variant/40 bg-surface-container/60 hover:bg-surface-variant hover:border-primary/40 transition-all text-on-surface group cursor-pointer"
             title={`Next Process: ${nextStep.name}`}
           >
             <div className="text-right">
@@ -134,9 +146,7 @@ export function SpinningProcessNav({ currentRoute }: SpinningProcessNavProps) {
                 {nextStep.name} Calculator
               </span>
             </div>
-            <span className="material-symbols-outlined text-secondary group-hover:translate-x-1 transition-transform">
-              arrow_forward
-            </span>
+            <ArrowRight className="w-5 h-5 text-secondary group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </Link>
         )}
       </div>
@@ -145,9 +155,7 @@ export function SpinningProcessNav({ currentRoute }: SpinningProcessNavProps) {
       <div className="bg-surface-container-low/70 border border-outline-variant/30 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="headline-md text-on-surface text-base md:text-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-[20px]">
-              account_tree
-            </span>
+            <GitFork className="w-5 h-5 text-primary" aria-hidden="true" />
             Sequential Spinning Mill Process Flow
           </h2>
           <span className="text-xs text-on-surface-variant font-jetbrains hidden md:inline">
@@ -158,11 +166,12 @@ export function SpinningProcessNav({ currentRoute }: SpinningProcessNavProps) {
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
           {SPINNING_PROCESS_STEPS.map((step, idx) => {
             const isActive = step.path === currentRoute;
+            const StepIcon = step.icon;
             return (
               <Link
                 key={step.path}
                 href={step.path}
-                className={`flex flex-col p-2.5 rounded-lg border transition-all text-left ${
+                className={`flex flex-col p-2.5 rounded-lg border transition-all text-left cursor-pointer ${
                   isActive
                     ? "bg-primary-container/20 border-primary text-primary font-semibold shadow-sm"
                     : "bg-surface-container-highest/20 border-outline-variant/30 hover:border-outline-variant hover:bg-surface-container-highest/40 text-on-surface-variant hover:text-on-surface"
@@ -170,9 +179,7 @@ export function SpinningProcessNav({ currentRoute }: SpinningProcessNavProps) {
               >
                 <div className="flex items-center justify-between text-[11px] mb-1">
                   <span className="opacity-70 font-jetbrains">0{idx + 1}</span>
-                  {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  )}
+                  <StepIcon className="w-3.5 h-3.5 opacity-80" aria-hidden="true" />
                 </div>
                 <span className="text-xs leading-snug line-clamp-1">{step.name}</span>
                 <span className="text-[10px] opacity-60 font-jetbrains mt-0.5 line-clamp-1">

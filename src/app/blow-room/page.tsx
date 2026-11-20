@@ -2,105 +2,132 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import React from "react";
 import { BlowRoomCalculator } from "./BlowRoomCalculator";
-import { TechnicalNotes } from "@/components/TechnicalNotes";
+import { TechnicalNotes, FormulaItem, VariableDef, WorkedExample, MillBenchmark } from "@/components/TechnicalNotes";
 import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 
 export const metadata: Metadata = {
   title: "Blow Room Production & Lap Weight Calculator",
   description:
-    "Calculate blow room production in kg/hr, bags/shift, scutcher RPM, calender roller diameter, and cleaning waste percentage for textile spinning mills in Faisalabad, Coimbatore, and Dhaka.",
+    "Calculate blow room production in kg/hr, bags/shift, calender speed (m/min), and lap weight (g/m) using verified standard textile spinning mathematical formulas.",
   keywords: [
     "blow room calculator",
-    "blow room production kg hr",
-    "scutcher production calculation",
-    "lap weight calculation",
-    "blow room waste percentage",
-    "cleaning efficiency formula textile",
-    "Faisalabad spinning mills blow room",
-    "chute feed production calculation"
+    "blow room production kg hr formula",
+    "calender speed m min",
+    "lap weight g m",
+    "blow room calculations textile",
+    "scutcher production calculation"
   ],
   alternates: {
-    canonical: "/blow-room",
+    canonical: "https://spincalc.vercel.app/blow-room",
   },
   openGraph: {
     title: "Blow Room Production & Lap Weight Calculator | SpinCalc",
     description:
-      "Calculate blow room line production in kg/hr, bags/shift, scutcher RPM, and waste percentage for textile spinning mills.",
+      "Calculate blow room production in kg/hr, shift output in bags, calender speed, and lap linear density using verified textile engineering equations.",
     url: "https://spincalc.vercel.app/blow-room",
   },
 };
 
-const formulas = [
+const processDefinition =
+  "The Blow Room is the foundational opening and cleaning stage in staple fiber spinning. Compressed raw cotton bales are plucked, opened into tiny fiber tufts, blended to homogenize micronaire, and purged of heavy seeds, sand, and plant trash. Accurately computing calender delivery speed (m/min) and lap weight (g/m) ensures balanced mass throughput that neither starves nor chokes downstream carding lines.";
+
+const formulas: FormulaItem[] = [
   {
-    name: "Production (lbs / 8-hr Shift) — Scutcher RPM Method",
-    formula: "Production (lbs/shift) = (π × D × N × Lap Weight × Eff% × (100 - Waste%) × Lines) / 12,000",
-    notes: "Where D = Roller Dia in inches, N = Roller RPM, Lap Weight is in oz/yard, and constant 12,000 resolves conversion (36 inches/yd × 16 oz/lb × 10,000 divisor)."
+    name: "Standard Blow Room Production (kg/hr)",
+    formula: "Production (kg/hr) = (Calender Speed [m/min] × 60 × Lap Weight [g/m] / 1000) × (Eff % / 100)",
+    notes: "Calender Speed in m/min multiplied by 60 gives meters per hour. Multiplying by lap weight (g/m) and dividing by 1000 yields gross kilograms per hour."
   },
   {
-    name: "Production (kg / 8-hr Shift) — Continuous Chute-Feed Method",
-    formula: "Production (kg/shift) = Delivery Rate (kg/hr) × 8 × (Efficiency / 100) × Number of Lines",
-    notes: "Standard on modern Rieter VARIOline & Trützschler Blowroom feeding continuous card chutes without laps."
+    name: "Shift Production (kg and Commercial 100-lb Bags)",
+    formula: "Shift Output (kg/8-hr) = Production (kg/hr) × 8   ⟹   Bags/shift = (Shift kg × 2.20462) / 100",
+    notes: "1 commercial textile bag equals 100 avoirdupois pounds (45.3592 kg). 24-hr daily production equals shift output multiplied by 3."
   },
   {
-    name: "Shift Production in 100-lb Commercial Bags",
-    formula: "Bags / Shift = Total Production (lbs / shift) / 100",
-    notes: "Standard commercial production unit utilized by mill managers across Pakistan, India, and Bangladesh."
-  },
-  {
-    name: "Cleaning Efficiency Percentage",
-    formula: "Cleaning Efficiency (%) = ((Trash% in Bales - Trash% in Card Mat) / Trash% in Bales) × 100",
-    notes: "Monitored via Shirley Analyzer or Uster AFIS trash modules to prevent excessive fiber loss."
+    name: "Lap Weight Unit Conversion (oz/yd to g/m)",
+    formula: "Lap Weight (g/m) = Lap Weight (oz/yd) × 31.003",
+    notes: "Derived from (28.3495 grams/oz) / (0.9144 meters/yard) = 31.0034 g/m per oz/yd."
   }
 ];
 
-const variables = [
+const variables: VariableDef[] = [
   {
-    symbol: "D",
-    name: "Bottom Calender Roller Diameter",
-    description: "Diameter of the bottom calender roller delivering the compacted fiber lap sheet.",
-    typicalRange: "7.0 – 9.0 inches"
+    symbol: "Calender Speed",
+    name: "Calender Delivery Speed",
+    unit: "m/min",
+    description: "Linear surface speed of the scutcher calender rollers that compress and deliver the fiber sheet.",
+    typicalRange: "10.0 – 16.0 m/min"
   },
   {
-    symbol: "N",
-    name: "Calender Roller RPM",
-    description: "Rotational revolutions per minute of the scutcher calender roller driving lap take-up.",
-    typicalRange: "10 – 18 RPM"
-  },
-  {
-    symbol: "Lap Wt",
-    name: "Lap Weight per Yard",
-    description: "Linear density of the rolled lap sheet measured in ounces per yard.",
-    typicalRange: "12 – 16 oz/yd"
-  },
-  {
-    symbol: "Waste %",
-    name: "Blow Room Droppings & Invisible Loss",
-    description: "Heavy trash, motes, broken seeds, and micro-dust extracted across beating rollers.",
-    typicalRange: "3.0% – 5.5%"
+    symbol: "Lap Weight",
+    name: "Linear Mass Density of Lap",
+    unit: "g/m",
+    description: "Weight per unit length of the delivered fiber sheet (typically 400 – 500 g/m, corresponding to 13 – 16 oz/yd).",
+    typicalRange: "400 – 500 g/m"
   },
   {
     symbol: "Eff %",
     name: "Operational Efficiency",
-    description: "Net running time accounting for lap doffing, filter bag cleaning, and magnet inspection.",
-    typicalRange: "82% – 90%"
+    unit: "%",
+    description: "Net operating efficiency of the blow room line after deducting lap doffing and filter cleaning cycles.",
+    typicalRange: "80% – 90%"
+  },
+  {
+    symbol: "1000",
+    name: "Metric Mass Conversion Constant",
+    unit: "g/kg",
+    description: "Divisor converting delivered grams of fiber into standard kilograms.",
+    typicalRange: "Exact Constant (1000)"
   }
 ];
 
-const benchmarks = [
+const workedExample: WorkedExample = {
+  title: "Rieter Blow Room Scutcher Line Production",
+  scenario:
+    "A spinning mill in Faisalabad operates a blow room line producing a 450 g/m cotton lap sheet at a calender speed of 12.0 m/min with an operational efficiency of 85%.",
+  givenInputs: [
+    { label: "Calender Speed", value: "12.0 m/min" },
+    { label: "Lap Weight", value: "450 g/m" },
+    { label: "Efficiency", value: "85%" },
+    { label: "Shift Duration", value: "8 Hours" }
+  ],
+  steps: [
+    {
+      stepTitle: "Calculate Theoretical Hourly Production (100% Efficiency)",
+      formulaStr: "Theoretical kg/hr = (Calender Speed × 60 × Lap Weight) / 1000",
+      calculationStr: "(12.0 × 60 × 450) / 1000",
+      resultStr: "324.00 kg/hr"
+    },
+    {
+      stepTitle: "Apply Operating Efficiency (85%)",
+      formulaStr: "Actual kg/hr = Theoretical kg/hr × (85 / 100)",
+      calculationStr: "324.00 × 0.85",
+      resultStr: "275.40 kg/hr"
+    },
+    {
+      stepTitle: "Calculate 8-Hour Shift Output in Kilograms and Commercial 100-lb Bags",
+      formulaStr: "Shift kg = 275.40 × 8 | Bags = (Shift kg × 2.20462) / 100",
+      calculationStr: "2,203.20 kg × 2.20462 / 100",
+      resultStr: "2,203.20 kg = 4,857.22 lbs = 48.57 Bags / shift"
+    }
+  ],
+  finalResult: "275.40 kg/hr (48.57 bags / 8-hr shift)"
+};
+
+const benchmarks: MillBenchmark[] = [
   {
-    title: "Punjab & Sindh (Pakistan)",
-    region: "Faisalabad & Multan",
-    observation: "Local cotton (MNH-93, NIAB) carries 6%–9% initial trash. Chute lines run 700–900 kg/hr with 3.8%–4.5% waste target to safeguard yarn realization."
+    title: "Punjab (Faisalabad & Multan)",
+    region: "Local Medium Staple",
+    observation: "Chute feeds and lap formers operate at 250–320 kg/hr per line with 3.8%–4.5% cleaning waste target."
   },
   {
     title: "Gujarat & Tamil Nadu (India)",
-    region: "Ahmedabad & Coimbatore",
-    observation: "For Shankar-6 and MCU-5 upland cotton, Trützschler blowrooms run at 800–1,100 kg/hr with cleaning efficiency calibrated between 60% and 68%."
+    region: "Shankar-6 & MCU-5",
+    observation: "Modern blowrooms maintain 750–1,000 kg/hr continuous chute output feeding 10–12 cards directly."
   },
   {
     title: "Dhaka & Gazipur (Bangladesh)",
-    region: "Imported US & West African Cotton",
-    observation: "For 30s combed knit yarn lines, clean machine settings prioritize low nep generation (AFIS nep count < 220 neps/g) at 750–850 kg/hr delivery."
+    region: "100% Cotton Knitwear",
+    observation: "Blow rooms running combed cotton maintain low beater speeds to preserve fiber length (SFC < 7.5%)."
   }
 ];
 
@@ -122,20 +149,21 @@ export default function BlowRoomPage() {
           Blow Room Production & Lap Weight Calculator
         </h1>
         <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
-          Compute blow room delivery rates in kilograms per hour, shift output in commercial 100-lb bags, scutcher roller RPM, and cleaning waste percentages for modern textile spinning mills.
+          Calculate blow room production in kg/hr, shift output in commercial 100-lb bags, calender delivery speed, and lap linear weight using standard textile engineering equations.
         </p>
       </div>
 
       {/* Interactive Calculator */}
       <BlowRoomCalculator />
 
-      {/* Crawlable Technical Formulas & Engineering Notes */}
+      {/* Crawlable Technical Formulas, Key & Worked Example */}
       <TechnicalNotes
         departmentTitle="Blow Room Department"
+        processDefinition={processDefinition}
         formulas={formulas}
         variables={variables}
+        workedExample={workedExample}
         benchmarks={benchmarks}
-        technicalOverview="The Blow Room constitutes the primary mechanical opening, blending, and cleaning stage in staple fiber yarn spinning. Raw cotton from compressed bales is opened into tiny tufts, purged of heavy vegetable impurities, seed coat fragments, and dust, and formed into either a calibrated lap or pneumatically transported through chute feeds directly to the carding machines. Accurate mathematical calculations of scutcher calender speed, lap linear weight, and line efficiency ensure uniform mass distribution and balanced production flow across downstream carding lines."
       />
 
       {/* Internal Linking & Process Flow Navigation */}
