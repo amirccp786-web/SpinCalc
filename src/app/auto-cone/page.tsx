@@ -8,11 +8,11 @@ import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 export const metadata: Metadata = {
   title: "Auto Cone Winding Production & Drum Efficiency Calculator",
   description:
-    "Calculate automatic cone winding production in kg/drum/hr, shift output in commercial bags, winding speed (m/min), and yarn count (Ne) using verified textile formulas.",
+    "Calculate automatic cone winding production in lbs/shift, commercial bags, winding speed (m/min), and yarn count (Ne) using verified textile formulas.",
   keywords: [
     "auto cone calculator",
-    "cone winding production kg drum hr",
-    "winding speed m min calculation",
+    "cone winding production lbs shift formula",
+    "winding speed m min",
     "autoconer efficiency calculation",
     "Murata QPRO winder production",
     "textile cone winding formulas"
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Auto Cone Winding Production & Drum Efficiency Calculator | SpinCalc",
     description:
-      "Calculate autoconer winding throughput in kg/drum/hr, machine output in commercial bags, and drum efficiency using verified textile engineering equations.",
+      "Calculate autoconer winding throughput in lbs/shift, commercial bags, and drum efficiency using verified textile engineering equations.",
     url: "https://spincalc.vercel.app/auto-cone",
   },
 };
@@ -33,18 +33,18 @@ const processDefinition =
 
 const formulas: FormulaItem[] = [
   {
-    name: "Winding Production (kg / drum / hr)",
-    formula: "Production (kg/drum/hr) = (Winding Speed [m/min] × 60 × 0.5905 / (Yarn Count Ne × 1000)) × (Eff % / 100)",
-    notes: "Constant 0.5905 converts English Cotton Count (Ne) to metric tex (1 Ne = 590.54 tex = 0.5905 g/m). Dividing by 1000 converts delivered grams to kilograms."
+    name: "Winding Production (lbs / 8-hr Shift)",
+    formula: "Production (lbs/shift) = (Winding Speed [m/min] × 1.0936 × 60 × 8 × (Eff % / 100) × Drums) / (840 × Yarn Count Ne)",
+    notes: "Multiplying speed (m/min) by 1.0936 converts meters to yards. Multiplying by 60 and 8 gives total yards per shift. Dividing by 840 × Ne converts total yards into pounds."
   },
   {
-    name: "Total Machine Shift Production (8 Hours)",
-    formula: "Shift Output (kg) = kg/drum/hr × Drums per Machine × 8   ⟹   Bags = (Shift kg × 2.20462) / 100",
-    notes: "Multiply by total mill winders to ensure clear-room capacity matches ring spinning output."
+    name: "Conversion to Commercial 100-lb Bags and Kilograms",
+    formula: "Bags / Shift = Production (lbs/shift) / 100   ⟹   Production (kg/shift) = Production (lbs/shift) / 2.20462",
+    notes: "Multiply by total mill winders to ensure clear-room capacity matches ring spinning room output."
   },
   {
-    name: "Cone Packaging Calculation",
-    formula: "Cones Produced / Shift = Shift Output (kg) / Nominal Cone Weight (kg)",
+    name: "Cone Packaging Output",
+    formula: "Cones Produced / Shift = Production (kg/shift) / Nominal Cone Weight (kg)",
     notes: "Standard package weight is 1.89 kg (knitting packages) or 2.50 kg (weaving warp packages)."
   }
 ];
@@ -56,6 +56,13 @@ const variables: VariableDef[] = [
     unit: "m/min",
     description: "Linear rate of yarn winding onto conical paper bobbins driven by grooved traverse drums.",
     typicalRange: "1,100 – 1,500 m/min"
+  },
+  {
+    symbol: "1.0936",
+    name: "Meter to Yard Conversion Constant",
+    unit: "yd/m",
+    description: "Exact multiplier converting linear meters delivered into yards (since 1 meter = 1.09361 yards).",
+    typicalRange: "Exact Constant (1.0936)"
   },
   {
     symbol: "Yarn Count (Ne)",
@@ -72,27 +79,28 @@ const variables: VariableDef[] = [
     typicalRange: "48 – 72 drums"
   },
   {
+    symbol: "840",
+    name: "English Cotton Hank Constant",
+    unit: "yd/hank",
+    description: "Standard yards per hank in the English cotton count system.",
+    typicalRange: "Exact Constant (840)"
+  },
+  {
     symbol: "Eff %",
     name: "Operational Efficiency",
     unit: "%",
     description: "Net uptime accounting for bobbin feeding, yarn clearer cut cycles, and automatic doffing.",
     typicalRange: "80% – 88%"
-  },
-  {
-    symbol: "0.5905",
-    name: "Tex / Ne Conversion Constant",
-    unit: "g·Ne/m",
-    description: "Derived from (453.592 g/lb) / (840 yd/hank × 0.9144 m/yd) = 0.59054.",
-    typicalRange: "Exact Constant (0.5905)"
   }
 ];
 
 const workedExample: WorkedExample = {
   title: "60-Drum Autoconer Running 30s Cotton Yarn",
   scenario:
-    "A spinning mill in Dhaka runs a 60-drum Murata QPRO automatic cone winder at 1,200 m/min winding speed processing 30s Ne yarn with 85% operational efficiency.",
+    "A spinning mill runs a 60-drum automatic cone winder at 1,200 m/min winding speed processing 30s Ne yarn with 85% operational efficiency over an 8-hour shift.",
   givenInputs: [
     { label: "Winding Speed", value: "1,200 m/min" },
+    { label: "Meter-to-Yard Factor", value: "1.0936 yd/m" },
     { label: "Yarn Count", value: "30s Ne" },
     { label: "Drums / Machine", value: "60 Drums" },
     { label: "Efficiency", value: "85%" },
@@ -100,31 +108,25 @@ const workedExample: WorkedExample = {
   ],
   steps: [
     {
-      stepTitle: "Calculate Theoretical Output per Drum per Hour",
-      formulaStr: "Gross kg/drum/hr = (Winding Speed × 60 × 0.5905) / (Ne × 1000)",
-      calculationStr: "(1200 × 60 × 0.5905) / (30 × 1000) = 42,516 / 30,000",
-      resultStr: "1.4172 kg/drum/hr (100% Eff)"
+      stepTitle: "Calculate Total Linear Yards Wound per Shift (Multiplying by 1.0936)",
+      formulaStr: "Total Yards = Speed (m/min) × 1.0936 × 60 × 8 × (Eff / 100) × Drums",
+      calculationStr: "1200 × 1.0936 × 60 × 8 × 0.85 × 60 = 1200 × 1.0936 × 480 × 51",
+      resultStr: "32,165,145.60 yards delivered"
     },
     {
-      stepTitle: "Apply 85% Operating Efficiency",
-      formulaStr: "Actual kg/drum/hr = 1.4172 × (85 / 100)",
-      calculationStr: "1.4172 × 0.85",
-      resultStr: "1.2046 kg/drum/hr"
+      stepTitle: "Convert Yards to Pounds using Count Constant (840 × Ne)",
+      formulaStr: "Production (lbs/shift) = Total Yards / (840 × Yarn Count Ne)",
+      calculationStr: "32,165,145.60 / (840 × 30) = 32,165,145.60 / 25,200",
+      resultStr: "1,276.39 lbs / shift"
     },
     {
-      stepTitle: "Calculate Total Machine Production per Hour (60 Drums)",
-      formulaStr: "Machine kg/hr = 1.2046 × 60 Drums",
-      calculationStr: "1.2046 × 60",
-      resultStr: "72.28 kg/hr per machine"
-    },
-    {
-      stepTitle: "Calculate Machine Shift Production in Commercial 100-lb Bags",
-      formulaStr: "Shift kg = 72.28 × 8 = 578.23 kg | Bags = (578.23 × 2.20462) / 100",
-      calculationStr: "578.23 × 2.20462 / 100",
-      resultStr: "578.23 kg = 1,274.78 lbs = 12.75 Bags / shift (38.24 bags / day)"
+      stepTitle: "Calculate Commercial 100-lb Bags and Metric Kilograms",
+      formulaStr: "Bags = lbs / 100 | kg = lbs / 2.20462",
+      calculationStr: "1,276.39 / 100 | 1,276.39 / 2.20462",
+      resultStr: "12.76 Bags / shift (38.29 bags / day, 578.96 kg / shift)"
     }
   ],
-  finalResult: "1.205 kg/drum/hr (72.28 kg/hr machine, 12.75 bags / 8-hr shift)"
+  finalResult: "1,276.39 lbs / shift (12.76 bags / 8-hr shift, 578.96 kg)"
 };
 
 const benchmarks: MillBenchmark[] = [
@@ -163,7 +165,7 @@ export default function AutoConePage() {
           Auto Cone Winding Production & Drum Efficiency Calculator
         </h1>
         <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
-          Calculate automatic cone winding production in kg/drum/hr, total machine output in commercial 100-lb bags, winding speed (m/min), and drum efficiency using verified textile spinning formulas.
+          Calculate automatic cone winding production in lbs/shift, commercial 100-lb bags, winding speed (m/min), and drum efficiency using verified textile spinning formulas.
         </p>
       </div>
 

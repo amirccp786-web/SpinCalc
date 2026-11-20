@@ -21,10 +21,10 @@ export function AutoConeCalculator() {
 
     if (numMachines === 0 || speed === 0 || ne === 0 || numDrums === 0) return 0;
 
-    // Formula for winding production in kg/shift (8 hours) per machine:
-    // Prod (kg) = (Speed(m/min) * 60 * 8 * Eff/100 * Drums) / (Ne * 1693.3)
-    const prodKg = (speed * 60 * 8 * (eff / 100) * numDrums) / (ne * 1693.3);
-    const prodLb = prodKg * 2.20462 * numMachines;
+    // Standard Textile Formula (multiplying by 1.0936 to convert meters to yards):
+    // Yards/shift = Speed (m/min) * 1.0936 * 60 * 8 * (Eff / 100) * Drums
+    // Prod (lbs/shift) = Total Yards / (840 * Ne)
+    const prodLb = (speed * 1.0936 * 60 * 8 * (eff / 100) * numDrums * numMachines) / (840 * ne);
     return prodLb;
   };
 
@@ -89,7 +89,8 @@ export function AutoConeCalculator() {
 
         <div className="mt-6 p-4 rounded-xl bg-surface-container-highest/40 border border-outline-variant/30 text-xs text-on-surface-variant font-jetbrains">
           <span className="text-secondary font-bold block mb-1">Standard Formula Applied:</span>
-          Prod (kg/shift) = (Speed × 60 × 8 × Eff/100 × Drums) / (Ne × 1693.3)
+          • Prod (lbs/shift) = (Speed [m/min] × 1.0936 × 60 × 8 × Eff/100 × Drums) / (840 × Ne)<br />
+          • Prod (kg/shift) = Prod (lbs/shift) / 2.20462
         </div>
       </div>
 
