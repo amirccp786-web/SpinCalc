@@ -6,46 +6,46 @@ import { TechnicalNotes, FormulaItem, VariableDef, WorkedExample, MillBenchmark 
 import { SpinningProcessNav } from "@/components/SpinningProcessNav";
 
 export const metadata: Metadata = {
-  title: "Carding Machine Production & Total Draft Calculator",
+  title: "Carding Machine Production & Sliver Weight Calculator",
   description:
-    "Calculate carding production in kg/hr, delivery speed (m/min), sliver linear density (g/m), and total draft using verified textile spinning formulas.",
+    "Calculate carding production in lbs/shift, commercial 100-lb bags, delivery speed (m/min), and sliver weight (grains/yd) using standard textile spinning formulas.",
   keywords: [
     "carding calculator",
-    "carding production kg hr formula",
-    "carding total draft calculation",
-    "card sliver weight g m",
-    "carding delivery speed",
-    "textile carding calculations"
+    "carding production lbs shift formula",
+    "card sliver weight grains yard",
+    "carding delivery speed m min",
+    "textile carding calculations",
+    "carding production in bags"
   ],
   alternates: {
     canonical: "https://spincalc.vercel.app/card",
   },
   openGraph: {
-    title: "Carding Machine Production & Total Draft Calculator | SpinCalc",
+    title: "Carding Machine Production & Sliver Weight Calculator | SpinCalc",
     description:
-      "Calculate carding machine production in kg/hr, total draft, shift output in bags, and delivery speed using verified textile engineering equations.",
+      "Calculate carding machine production in lbs/shift, commercial bags, delivery speed, and sliver weight in grains/yard.",
     url: "https://spincalc.vercel.app/card",
   },
 };
 
 const processDefinition =
-  "Known universally as the 'Heart of the Spinning Mill', the Carding machine individualizes tangled cotton tufts into single fibers, separates micro-neps and residual seed coat fragments, and condenses the cleaned web into a continuous sliver. Precision calculations of delivery speed (m/min), sliver linear density (g/m), and total draft are vital to stabilizing downstream drawing evenness and final yarn tensile strength.";
+  "Known universally as the 'Heart of the Spinning Mill', the Carding machine individualizes tangled cotton tufts into single fibers, separates micro-neps and residual seed coat fragments, and condenses the cleaned web into a continuous sliver. Precision calculations of delivery speed (m/min), sliver linear density (grains/yard), and machine efficiency are vital to stabilizing downstream drawing evenness and final yarn tensile strength.";
 
 const formulas: FormulaItem[] = [
   {
-    name: "Carding Production Rate (kg/hr)",
-    formula: "Production (kg/hr) = (Delivery Speed [m/min] × 60 × Sliver Weight [g/m] / 1000) × (Eff % / 100)",
-    notes: "Delivery Speed in m/min multiplied by 60 gives linear meters delivered per hour. Multiplying by sliver weight in g/m gives delivered grams, converted to kg by dividing by 1000."
+    name: "Carding Shift Production (lbs / 8-hr Shift)",
+    formula: "Production (lbs/shift) = (Delivery Speed [m/min] × 60 × 8 × (Eff % / 100) × Sliver [grains/yd] × 1.0936) / 7,000",
+    notes: "1 meter equals 1.0936 yards. 7,000 grains equal 1 avoirdupois pound. Divide lbs by 100 to get commercial 100-lb bags."
   },
   {
-    name: "Total Mechanical Draft",
-    formula: "Total Draft = Feed Lap Weight (g/m) / Delivered Sliver Weight (g/m)",
-    notes: "Indicates the degree of fiber strand attenuation between the feed roller and the doffer/calender rollers (typically 80 to 140)."
+    name: "Carding Daily Production (24 Hours)",
+    formula: "Daily Output = Shift Production (lbs / 8-hr) × 3   ⟹   Daily Bags = Daily lbs / 100",
+    notes: "3 continuous 8-hour operational shifts per 24-hour day in spinning mills."
   },
   {
-    name: "Unit Conversion (g/m to grains/yard)",
-    formula: "Sliver (grains/yd) = Sliver (g/m) × 14.17   ⟺   Sliver (g/m) = Sliver (grains/yd) / 14.17",
-    notes: "Derived from 7000 grains/lb divided by 453.592 g/lb multiplied by 0.9144 m/yd = 14.172 grains per yard per g/m."
+    name: "Metric Unit Balance (kg/shift)",
+    formula: "Production (kg/shift) = Production (lbs/shift) / 2.20462",
+    notes: "1 commercial textile bag (100 lbs) equals 45.3592 kg."
   }
 ];
 
@@ -54,22 +54,29 @@ const variables: VariableDef[] = [
     symbol: "Delivery Speed",
     name: "Doffer Delivery Speed",
     unit: "m/min",
-    description: "Surface speed of the doffer and crushing rollers delivering the card web into the sliver trumpet.",
+    description: "Linear throughput surface speed of the doffer and crushing rollers delivering the web into the coiler.",
     typicalRange: "120 – 240 m/min"
   },
   {
     symbol: "Sliver Weight",
     name: "Delivered Sliver Mass Density",
-    unit: "g/m",
-    description: "Weight per unit length of the delivered card sliver (typically 4.0 – 5.5 g/m, corresponding to 55 – 78 grains/yd).",
-    typicalRange: "4.0 – 5.5 g/m"
+    unit: "grains/yd",
+    description: "Weight per unit length of the delivered card sliver (typically 60 – 75 grains/yd, where 70 grains/yd = 4.94 g/m).",
+    typicalRange: "60 – 75 grains/yd"
   },
   {
-    symbol: "Feed Lap Weight",
-    name: "Chute Batt or Lap Weight",
-    unit: "g/m",
-    description: "Mass per unit length of the infeed batt entering the licker-in roller.",
-    typicalRange: "400 – 550 g/m"
+    symbol: "1.0936",
+    name: "Meter to Yard Conversion Constant",
+    unit: "yd/m",
+    description: "Exact multiplier converting linear meters delivered into yards.",
+    typicalRange: "Exact Constant (1.0936)"
+  },
+  {
+    symbol: "7,000",
+    name: "Grains to Pound Constant",
+    unit: "grains/lb",
+    description: "Exact number of grains in one avoirdupois pound.",
+    typicalRange: "Exact Constant (7,000)"
   },
   {
     symbol: "Eff %",
@@ -81,54 +88,54 @@ const variables: VariableDef[] = [
 ];
 
 const workedExample: WorkedExample = {
-  title: "High-Speed Card Production & Total Draft",
+  title: "Standard Mill Card Production in Grains/Yard",
   scenario:
-    "A spinning mill in Coimbatore runs a Trützschler TC carding machine at 160 m/min delivery speed with a delivered sliver weight of 4.80 g/m (~68 grains/yd), infeed chute batt weight of 450 g/m, and 88% operational efficiency.",
+    "A spinning mill runs a carding machine at 150 m/min delivery speed with a delivered sliver weight of 70 grains/yard and 85% operational efficiency over an 8-hour shift.",
   givenInputs: [
-    { label: "Delivery Speed", value: "160 m/min" },
-    { label: "Sliver Weight", value: "4.80 g/m" },
-    { label: "Feed Lap Weight", value: "450 g/m" },
-    { label: "Efficiency", value: "88%" }
+    { label: "Delivery Speed", value: "150 m/min" },
+    { label: "Sliver Weight", value: "70 grains/yd" },
+    { label: "Efficiency", value: "85%" },
+    { label: "Shift Duration", value: "8 Hours" }
   ],
   steps: [
     {
-      stepTitle: "Calculate Total Mechanical Draft",
-      formulaStr: "Total Draft = Feed Lap Weight / Delivered Sliver Weight",
-      calculationStr: "450 / 4.80",
-      resultStr: "93.75 Draft Ratio"
+      stepTitle: "Calculate Total Linear Yards Delivered per Shift",
+      formulaStr: "Delivered Yards = Speed (m/min) × 60 × 8 × 1.0936",
+      calculationStr: "150 × 60 × 8 × 1.0936 = 7200 × 1.0936",
+      resultStr: "787,392 yards (100% Eff)"
     },
     {
-      stepTitle: "Calculate Theoretical Hourly Production (100% Efficiency)",
-      formulaStr: "Theoretical kg/hr = (Delivery Speed × 60 × Sliver Weight) / 1000",
-      calculationStr: "(160 × 60 × 4.80) / 1000",
-      resultStr: "46.08 kg/hr"
+      stepTitle: "Apply 85% Machine Operating Efficiency",
+      formulaStr: "Effective Yards = 787,392 × (85 / 100)",
+      calculationStr: "787,392 × 0.85",
+      resultStr: "669,283.2 yards"
     },
     {
-      stepTitle: "Apply 88% Operational Efficiency",
-      formulaStr: "Actual kg/hr = 46.08 × (88 / 100)",
-      calculationStr: "46.08 × 0.88",
-      resultStr: "40.55 kg/hr per machine"
+      stepTitle: "Calculate Total Weight in Grains and Convert to Pounds (7,000 gr/lb)",
+      formulaStr: "Production (lbs) = (Effective Yards × 70 grains/yd) / 7,000",
+      calculationStr: "(669,283.2 × 70) / 7,000 = 46,849,824 / 7,000",
+      resultStr: "6,692.83 lbs / 8-hr shift"
     },
     {
-      stepTitle: "Calculate 8-Hour Shift Output in Commercial 100-lb Bags",
-      formulaStr: "Shift kg = 40.55 × 8 = 324.40 kg | Bags = (324.40 × 2.20462) / 100",
-      calculationStr: "324.40 × 2.20462 / 100",
-      resultStr: "324.40 kg = 715.18 lbs = 7.15 Bags / shift"
+      stepTitle: "Calculate Commercial 100-lb Bags and Metric Kilograms",
+      formulaStr: "Bags = lbs / 100 | kg = lbs / 2.20462",
+      calculationStr: "6,692.83 / 100 | 6,692.83 / 2.20462",
+      resultStr: "66.93 Bags/shift (200.78 bags/day, 3,035.82 kg/shift)"
     }
   ],
-  finalResult: "40.55 kg/hr per card (7.15 bags / 8-hr shift, Draft: 93.75)"
+  finalResult: "6,692.83 lbs / shift (66.93 bags / 8-hr shift, 3,035.82 kg)"
 };
 
 const benchmarks: MillBenchmark[] = [
   {
     title: "Coimbatore & Tirupur (India)",
     region: "30s & 40s Combed Hosiery",
-    observation: "Modern cards run at 160–200 m/min with 4.5–5.0 g/m sliver, keeping nep removal efficiency (NRE) above 90%."
+    observation: "Modern cards run at 160–200 m/min with 60–65 gr/yd sliver, keeping nep removal efficiency (NRE) above 90%."
   },
   {
     title: "Faisalabad (Pakistan)",
     region: "20s Carded Weaving",
-    observation: "Cards run up to 220–240 m/min with 5.2 g/m sliver for maximum hourly throughput (55–65 kg/hr per card)."
+    observation: "Cards run up to 220–240 m/min with 70–75 gr/yd sliver for maximum hourly throughput (55–65 kg/hr per card)."
   },
   {
     title: "Gazipur (Bangladesh)",
@@ -152,10 +159,10 @@ export default function CardPage() {
       {/* Page Title & Context */}
       <div className="mb-8">
         <h1 className="headline-lg text-on-surface tracking-tight">
-          Carding Machine Production & Total Draft Calculator
+          Carding Machine Production & Sliver Weight Calculator
         </h1>
         <p className="body-md text-on-surface-variant mt-2 max-w-3xl leading-relaxed">
-          Calculate carding machine production in kg/hr, shift output in commercial 100-lb bags, delivery speed (m/min), sliver linear density (g/m), and total draft using verified textile equations.
+          Calculate carding production in lbs/shift, commercial 100-lb bags, delivery speed (m/min), and sliver linear density (grains/yard) using verified textile spinning equations.
         </p>
       </div>
 

@@ -7,49 +7,38 @@ import { Sliders, AlertTriangle } from "lucide-react";
 
 export function AutoConeCalculator() {
   const [machines, setMachines] = useState("1");
-  const [drums, setDrums] = useState("60");
   const [windingSpeed, setWindingSpeed] = useState("1200");
   const [yarnCount, setYarnCount] = useState("30");
   const [efficiency, setEfficiency] = useState("85");
+  const [drums, setDrums] = useState("60");
 
   const calculateProduction = () => {
     const numMachines = parseFloat(machines) || 0;
-    const numDrums = parseFloat(drums) || 0;
     const speed = parseFloat(windingSpeed) || 0;
     const ne = parseFloat(yarnCount) || 0;
     const eff = parseFloat(efficiency) || 0;
+    const numDrums = parseFloat(drums) || 0;
 
-    if (numMachines === 0 || numDrums === 0 || speed === 0 || ne === 0 || eff === 0) {
-      return { kgDrumHr: 0, totalKgHr: 0, shiftKg: 0, shiftLb: 0, shiftBags: 0, dayKg: 0, dayLb: 0, dayBags: 0 };
-    }
+    if (numMachines === 0 || speed === 0 || ne === 0 || numDrums === 0) return 0;
 
-    // Standard Textile Formula:
-    // Production (kg/drum/hr) = (Winding Speed [m/min] * 60 * 0.5905 / (Yarn Count Ne * 1000)) * (Eff% / 100)
-    const kgDrumHr = (speed * 60 * 0.5905 / (ne * 1000)) * (eff / 100);
-    const totalKgHr = kgDrumHr * numDrums * numMachines;
-
-    const shiftKg = totalKgHr * 8;
-    const shiftLb = shiftKg * 2.20462;
-    const shiftBags = shiftLb / 100;
-
-    const dayKg = shiftKg * 3;
-    const dayLb = shiftLb * 3;
-    const dayBags = shiftBags * 3;
-
-    return {
-      kgDrumHr,
-      totalKgHr,
-      shiftKg,
-      shiftLb,
-      shiftBags,
-      dayKg,
-      dayLb,
-      dayBags
-    };
+    // Formula for winding production in kg/shift (8 hours) per machine:
+    // Prod (kg) = (Speed(m/min) * 60 * 8 * Eff/100 * Drums) / (Ne * 1693.3)
+    const prodKg = (speed * 60 * 8 * (eff / 100) * numDrums) / (ne * 1693.3);
+    const prodLb = prodKg * 2.20462 * numMachines;
+    return prodLb;
   };
 
-  const prod = calculateProduction();
-  const isHighSpeed = parseFloat(windingSpeed) > 1700;
+  const rawProdLb = calculateProduction();
+  const prodLb = rawProdLb.toFixed(2);
+  const prodBags = (rawProdLb / 100).toFixed(2);
+  const prodKg = (rawProdLb / 2.20462).toFixed(2);
+
+  const rawProdDayLb = rawProdLb * 3;
+  const prodDayLb = rawProdDayLb.toFixed(2);
+  const prodDayBags = (rawProdDayLb / 100).toFixed(2);
+  const prodDayKg = (rawProdDayLb / 2.20462).toFixed(2);
+
+  const isHighSpeed = parseFloat(windingSpeed) > 1800;
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
@@ -61,32 +50,21 @@ export function AutoConeCalculator() {
         </h2>
 
         <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
-          <div className="grid grid-cols-2 gap-3">
-            <InputField
-              label="Machines"
-              unit="qty"
-              type="number"
-              value={machines}
-              onChange={(e) => setMachines(e.target.value)}
-            />
-            <InputField
-              label="Drums / Machine"
-              unit="drums"
-              type="number"
-              value={drums}
-              onChange={(e) => setDrums(e.target.value)}
-            />
-          </div>
-
+          <InputField
+            label="Machines"
+            unit="qty"
+            type="number"
+            value={machines}
+            onChange={(e) => setMachines(e.target.value)}
+          />
           <InputField
             label="Winding Speed"
             unit="m/min"
             type="number"
             value={windingSpeed}
             onChange={(e) => setWindingSpeed(e.target.value)}
-            error={isHighSpeed ? "Warning: Speed exceeds recommended limit (1700 m/min)" : undefined}
+            error={isHighSpeed ? "Warning: Speed exceeds recommended limit (1800 m/min)" : undefined}
           />
-
           <InputField
             label="Yarn Count"
             unit="Ne"
@@ -94,7 +72,6 @@ export function AutoConeCalculator() {
             value={yarnCount}
             onChange={(e) => setYarnCount(e.target.value)}
           />
-
           <InputField
             label="Efficiency"
             unit="%"
@@ -102,11 +79,17 @@ export function AutoConeCalculator() {
             value={efficiency}
             onChange={(e) => setEfficiency(e.target.value)}
           />
+          <InputField
+            label="Number of Drums"
+            type="number"
+            value={drums}
+            onChange={(e) => setDrums(e.target.value)}
+          />
         </form>
 
         <div className="mt-6 p-4 rounded-xl bg-surface-container-highest/40 border border-outline-variant/30 text-xs text-on-surface-variant font-jetbrains">
           <span className="text-secondary font-bold block mb-1">Standard Formula Applied:</span>
-          Production (kg/drum/hr) = (Winding Speed × 60 × 0.5905 / (Count Ne × 1000)) × (Eff / 100)
+          Prod (kg/shift) = (Speed × 60 × 8 × Eff/100 × Drums) / (Ne × 1693.3)
         </div>
       </div>
 
@@ -116,68 +99,43 @@ export function AutoConeCalculator() {
           <div className="bg-[#FFFBEB] border border-[#F59E0B] text-[#B45309] p-4 rounded-xl flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" aria-hidden="true" />
             <span className="body-md text-xs sm:text-sm">
-              Winding speed is extremely high. High risk of yarn hairiness increase, tension peaks, and package sloughing.
+              Winding speed is extremely high. High risk of yarn breakage.
             </span>
           </div>
         )}
 
         <CalculationCard
-          title="Production per Drum"
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prod.kgDrumHr.toFixed(3)}</span>
-              <span className="body-md text-on-surface-variant">kg/drum/hr</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{(prod.kgDrumHr * 2.20462).toFixed(3)}</span>
-              <span className="body-md text-on-surface-variant">lbs/drum/hr</span>
-            </div>
-          }
-          status={prod.kgDrumHr > 0 ? "success" : "default"}
-        />
-
-        <CalculationCard
-          title="Total Machine Production Rate"
-          value={
-            <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prod.totalKgHr.toFixed(2)}</span>
-              <span className="body-md text-on-surface-variant">kg/hr</span>
-              <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary">{(prod.totalKgHr * 2.20462).toFixed(2)}</span>
-              <span className="body-md text-on-surface-variant">lbs/hr</span>
-            </div>
-          }
-          status={prod.totalKgHr > 0 ? "success" : "default"}
-        />
-
-        <CalculationCard
           title="Total Production / Shift (8 Hours)"
           value={
             <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prod.shiftKg.toFixed(2)}</span>
-              <span className="body-md text-on-surface-variant">kg</span>
-              <span className="text-outline-variant mx-1">|</span>
-              <span>{prod.shiftLb.toFixed(2)}</span>
+              <span>{prodLb}</span>
               <span className="body-md text-on-surface-variant">lbs</span>
               <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary font-bold">{prod.shiftBags.toFixed(2)}</span>
-              <span className="body-md text-on-surface-variant">bags (100 lb)</span>
+              <span className="text-secondary font-bold">{prodBags}</span>
+              <span className="body-md text-on-surface-variant">bags</span>
+              <span className="text-outline-variant mx-1">|</span>
+              <span className="text-secondary">{prodKg}</span>
+              <span className="body-md text-on-surface-variant">kg</span>
             </div>
           }
-          status={prod.shiftKg > 0 ? "success" : "default"}
+          status={prodLb !== "0.00" ? "success" : "default"}
         />
 
         <CalculationCard
           title="Total Production / Day (24 Hours)"
           value={
             <div className="flex items-baseline flex-wrap gap-2">
-              <span>{prod.dayKg.toFixed(2)}</span>
-              <span className="body-md text-on-surface-variant">kg</span>
+              <span>{prodDayLb}</span>
+              <span className="body-md text-on-surface-variant">lbs</span>
               <span className="text-outline-variant mx-1">=</span>
-              <span className="text-secondary font-bold">{prod.dayBags.toFixed(2)}</span>
-              <span className="body-md text-on-surface-variant">bags/day</span>
+              <span className="text-secondary font-bold">{prodDayBags}</span>
+              <span className="body-md text-on-surface-variant">bags</span>
+              <span className="text-outline-variant mx-1">|</span>
+              <span className="text-secondary">{prodDayKg}</span>
+              <span className="body-md text-on-surface-variant">kg</span>
             </div>
           }
-          status={prod.dayKg > 0 ? "success" : "default"}
+          status={prodDayLb !== "0.00" ? "success" : "default"}
         />
       </div>
     </div>
